@@ -1,11 +1,9 @@
 ##  pnextract -- pore-network extraction
 
 This code extracts a conventional pore network from a micro-CT image.
-The source code has been developed by me, Ali Qaseminejad Raeini, at
-[Imperial College - pore-scale consortium].   
-It is a re-write of the maximal-ball network extraction algorithm by Dong and Blunt (2009). 
+It is a re-write of the maximal-ball network extraction algorithm by [Dong and Blunt, 2009]. 
 It is used as a base for the generalized network extraction code 
-(Raeini, Bijeljic and Blunt 2017).  It does not contain the modules
+[Raeini, Bijeljic and Blunt 2017].  It does not contain the modules
 for extracting the generalized network (corner elements) though.   
 The network parameters has been calibrated to reproduce single-phase flow 
 properties, and water-wet relative permeability curves of a set of sandstone rocks.
@@ -41,5 +39,7 @@ See the [Publications on our website].
 [Publications on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/publications/
 [Images on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/micro-ct-images-and-networks/
 [Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
+[Raeini, Bijeljic and Blunt 2017]: https://doi.org/10.1103/PhysRevE.97.023308
+[Dong and Blunt, 2009]: https://doi.org/10.1103/PhysRevE.80.036307
 
 
