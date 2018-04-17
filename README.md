@@ -27,7 +27,7 @@ To extract a pore network, decompress the pnextract.exe.7z and run:
 This executable should be used for research purposes only. 
 
 The source code will be placed on public domain
-(I am just being extra catuous right now).
+(I am just being extra catuous for now).
 
 The code and executables are provided as is, without any kind of warranty;
 use at your own risk.
