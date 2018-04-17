@@ -1,4 +1,4 @@
-##  pnextract -- Conventional pore-network extraction code
+##  pnextract -- pore-network extraction
 
 This code extracts a conventional pore network from a micro-CT image.
 The source code has been developed by me, Ali Qaseminejad Raeini, at
