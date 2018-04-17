@@ -5,8 +5,8 @@ The source code has been developed by me, Ali Qaseminejad Raeini, at
 [Imperial College - pore-scale consortium].   
 It is a re-write of the maximal-ball network extraction algorithm by Dong and Blunt (2009). 
 It is used as a base for the generalized network extraction code 
-(Raeini, Bijeljic and Blunt 2017), but does not contain the modules
-for extracting the generalized network (corner elements).   
+(Raeini, Bijeljic and Blunt 2017).  It does not contain the modules
+for extracting the generalized network (corner elements) though.   
 The network parameters has been calibrated to reproduce single-phase flow 
 properties, and water-wet relative permeability curves of a set of sandstone rocks.
 
