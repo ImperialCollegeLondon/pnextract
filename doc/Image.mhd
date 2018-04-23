@@ -6,7 +6,7 @@ DimSize =        1000  1000  1000
 ElementSpacing = 1.6   1.6   1.6
 Offset =         0   0   0
 
-ElementDataFile = Bentheimer.raw.gz
+ElementDataFile = Image.raw.gz
 
 DefaultImageFormat = tif
 

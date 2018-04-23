@@ -1,0 +1,108 @@
+##################### settings to adjust from here   ###################
+
+psCXX ?= g++-6
+
+psCFLAGS ?= -std=c++11  
+#-O3 -Wall -pedantic
+
+# myBinDir=
+# PoreScaleDir=
+
+
+
+
+############# set via makefile of individual applications ##############
+
+# USE_TIFF=1
+# USE_ZLIB=1
+# USE_OMP=1
+
+
+########################################################################
+####################### do not change here after   #####################
+
+
+ifdef PoreScaleDir
+ $(info PoreScaleDir is $(PoreScaleDir))
+else
+ # set PoreScaleDir to this file directory
+ PoreScaleDir := $(abspath $(lastword $(MAKEFILE_LIST))/..)
+ $(info PoreScaleDir set to $(PoreScaleDir))
+endif
+
+# psDir and PoreScaleDir are the same
+psDir=$(PoreScaleDir)
+
+# set myBinDir if not set
+myBinDir ?= $(psDir)/bin
+
+# set thirdparty directory if not set
+ifdef PS3rdParty
+ $(info PS3rdParty is $(PS3rdParty))
+else
+ ifneq ("$(wildcard $(psDir)/thirdparty/makefile)","")
+  PS3rdParty := $(psDir)/thirdparty
+ else
+  ifneq ("$(wildcard $(psDir)/../thirdparty/makefile)","")
+   PS3rdParty := $(psDir)/../thirdparty
+  endif
+ endif
+ $(info PS3rdParty set to $(PS3rdParty))
+endif
+
+
+ifdef USE_VXLIMG
+   psCFLAGS := -I$(psDir)/voxelImage $(psCFLAGS)
+   psLFLAGS := -L$(psDir)/bin     $(psLFLAGS)
+endif
+
+# set libtiff directory
+#Note: libtiff depends on libzxx above
+# libtiff.so will be copied to $(psDir)/bin; for now linking staticly
+ifdef USE_TIFF
+ TIFDIR=$(PS3rdParty)/libtiff/build
+ ifneq ("$(wildcard $(TIFDIR)/include/tiff.h)","")
+   psCFLAGS := -I$(TIFDIR)/include $(psCFLAGS) -DTIFLIB 
+   psLFLAGS := -L$(TIFDIR)/libtiff     $(psLFLAGS) -ltiff -ltiffxx -lstdc++ -lm
+
+   ljpeg=$(shell $(psCXX) -ljpeg 2>&1 | grep  'cannot find' | sed 's/.*cannot.*/0/g')
+   ifneq "$(ljpeg)" "0"
+       psLFLAGS := $(psLFLAGS)  -ljpeg 
+   else
+     $(warning cannot find -ljpeg)
+   endif
+
+
+   llzma=$(shell $(psCXX) -llzma 2>&1 | grep  'cannot find' | sed 's/.*cannot.*/0/g')
+   ifneq ("$(llzma)","0")
+      psLFLAGS := $(psLFLAGS)  -llzma 
+   else
+      #$(info cannot find -llzma: $(llzma) )
+   endif
+
+ else
+   $(warning TIFDIR,$(TIFDIR)/include/tiff.h, is not found, ignoring USE_TIFF)
+ endif
+endif
+
+
+
+# set zlib directory
+# Note: $(ZLIBDIR)/contrib/iostream3/zfstream.cc should be compiled in libzxx
+ifdef USE_ZLIB
+ ifneq ("$(wildcard $(PS3rdParty)/zlib-1.2.11/zlib.h)","")
+   ZLIBDIR=$(PS3rdParty)/zlib-1.2.11/build
+   psCFLAGS := -I$(ZLIBDIR)/include $(psCFLAGS) -DZLIB
+   psLFLAGS := -L$(ZLIBDIR)/lib     $(psLFLAGS)  -lzxx
+ else
+   $(warning ZLIBDIR, $(PS3rdParty)/zlib-1.2.11/zlib.h, not found, ignoring USE_ZLIB)
+ endif
+endif
+
+
+# set openMP for parallel image processing, mesh generation ...
+# not yet integrated with the "released" codes due to portability concerns
+ifdef USE_OMP 
+ psCFLAGS := $(psCFLAGS) -I/usr/lib/openmpi/include -fopenmp
+ psLFLAGS := $(psLFLAGS) -L/usr/lib/openmpi/lib -lmpi_cxx -lmpi -lopen-rte -lopen-pal -ldl -Wall -fopenmp
+endif
