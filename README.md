@@ -14,11 +14,12 @@ A sample input file, Image.mhd, is provided in the doc folder, in ascii
 (text) format. Please use this file together with a 8-bit micro-CT 
 image, similar to the [Images on our website].
 
-To extract a pore network, decompress the bin/pnextract.exe.7z and run:   
- pnextract.exe  Image.mhd
+To extract a pore network, decompress the [bin/pnextract.exe.7z](bin/pnextract.exe.7z) and run, 
+in a Windows Command Prompt:   
+   bin\pnextract.exe  Image.mhd
 
 ###  BUild instructions:
-Already compiled to bin/pnextract.exe, a Win64 executable, using mingw compilers.
+The code is already compiled to bin/pnextract.exe, a Win64 executable, using mingw compilers.
 
 The compilation can be done in Linux by running './AllMake' bash script.
 
