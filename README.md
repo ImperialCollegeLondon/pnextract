@@ -47,7 +47,7 @@ See the [Publications on our website].
 [Publications on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/publications/
 [Images on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/micro-ct-images-and-networks/
 [Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
-[Raeini, Bijeljic and Blunt 2017]: https://doi.org/10.1103/PhysRevE.97.023308
+[Raeini, Bijeljic and Blunt 2017]: https://doi.org/10.1103/PhysRevE.96.013312
 [Dong and Blunt, 2009]: https://doi.org/10.1103/PhysRevE.80.036307
 [libtiff]: https://gitlab.com/libtiff/libtiff
 [libz]: https://github.com/madler/zlib
