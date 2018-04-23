@@ -18,7 +18,7 @@ To extract a pore network, decompress the [bin/pnextract.exe.7z](bin/pnextract.e
 in a Windows Command Prompt:   
    bin\pnextract.exe  Image.mhd
 
-###  BUild instructions:
+###  Build instructions:
 The code is already compiled to bin/pnextract.exe, a Win64 executable, using mingw compilers.
 
 The compilation can be done in Linux by running './AllMake' bash script.
