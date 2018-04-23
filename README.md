@@ -14,7 +14,7 @@ A sample input file, Image.mhd, is provided in the doc folder, in ascii
 (text) format. Please use this file together with a 8-bit micro-CT 
 image, similar to the [Images on our website].
 
-To extract a pore network, decompress the pnextract.exe.7z and run:   
+To extract a pore network, decompress the bin/pnextract.exe.7z and run:   
  pnextract.exe  Image.mhd
 
 ###  BUild instructions:
@@ -23,7 +23,7 @@ Already compiled to bin/pnextract.exe, a Win64 executable, using mingw compilers
 The compilation can be done in Linux by running './AllMake' bash script.
 
 The './AllMakeMinGW' bash script compiles the code for Windows machines.
-Run './AllClean' beforhand to avoid mixing the intermidiate Linux and Windows object files.
+Run './AllClean' beforhand, to avoid mixing the intermidiate Linux and Windows object files.
 
 ###  Dependencies
 The included voxelImage library  is the main prerequisite. 
