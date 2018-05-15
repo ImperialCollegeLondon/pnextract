@@ -1,12 +1,16 @@
-﻿##  pnextract -- (Conventional) pore-network extraction
+﻿##  pnextract -- pore-network extraction
 
 This code extracts a conventional pore network from a micro-CT image.
-It is a re-write of the maximal-ball network extraction algorithm by [Dong and Blunt, 2009]. 
+It is a re-write of the maximal-ball network extraction algorithm by 
+[Dong and Blunt, 2009]. 
 It is used as a base for the generalized network extraction code 
-[Raeini, Bijeljic and Blunt 2017].  It does not contain the modules
-for extracting the generalized network (corner elements) though.   
+[Raeini, Bijeljic and Blunt 2017], but it does not contain the modules
+for extracting the generalized network (corner elements).
 The network parameters has been calibrated to reproduce single-phase flow 
-properties, and water-wet relative permeability curves of a set of sandstone rocks.
+properties, and water-wet relative permeability for a set of sandstone rocks.  
+The code uses a new scale-independent shape factor definition to characterize
+pores and throats, published in [Bultry et al. 2018].
+
 
 
 ### Instructions
@@ -14,8 +18,8 @@ A sample input file, Image.mhd, is provided in the doc folder, in ascii
 (text) format. Please use this file together with a 8-bit micro-CT 
 image, similar to the [Images on our website].
 
-To extract a pore network, decompress the [bin/pnextract.exe.7z](bin/pnextract.exe.7z) and run, 
-in a Windows Command Prompt:   
+To extract a pore network, decompress the [bin/pnextract.exe.7z](bin/pnextract.exe.7z) 
+and run, in a Windows Command Prompt:   
    bin\pnextract.exe  Image.mhd
 
 ###  Build instructions:
@@ -43,11 +47,20 @@ or send me an email:   a.qaseminejad-raeini09@imperial.ac.uk
 
 
 ### References
-See the [Publications on our website].
 
-[Publications on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/publications/
+H. Dong and M. J. Blunt, "Pore-network extraction from micro-computerized-tomography images",  Phys. Rev. E 80, 036307 (2009) 
+https://doi.org/10.1103/PhysRevE.80.036307
+
+A Q Raeini, B Bijeljic, and M J Blunt, "Generalized network modeling: Network extraction as a coarse-scale discretization of the void space of porous media", Phys. Rev. E 96, 013312  (2017)
+https://doi.org/10.1103/PhysRevE.96.013312
+
+T Bultreys, Q Lin, Y Gao, A Q Raeini, A AlRatrout, B Bijeljic, and M J Blunt . "Validation of model predictions of pore-scale fluid distributions during two-phase flow", Phys. Rev. E 97, 053104 (2018) 
+https://link.aps.org/doi/10.1103/PhysRevE.97.053104
+
+
 [Images on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/micro-ct-images-and-networks/
 [Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
+[Bultry et al. 2018]: https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 [Raeini, Bijeljic and Blunt 2017]: https://doi.org/10.1103/PhysRevE.96.013312
 [Dong and Blunt, 2009]: https://doi.org/10.1103/PhysRevE.80.036307
 [libtiff]: https://gitlab.com/libtiff/libtiff
