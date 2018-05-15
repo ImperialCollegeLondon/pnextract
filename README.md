@@ -9,7 +9,7 @@ for extracting the generalized network (corner elements).
 The network parameters has been calibrated to reproduce single-phase flow 
 properties, and water-wet relative permeability for a set of sandstone rocks.
 The code uses a new scale-independent shape factor definition to characterize
-pores and throats, published in [Bultry et al. 2018].
+pores and throats, published in [Bultreys et al. 2018].
 
 
 
@@ -60,7 +60,7 @@ https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 
 [Images on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/micro-ct-images-and-networks/
 [Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
-[Bultry et al. 2018]: https://link.aps.org/doi/10.1103/PhysRevE.97.053104
+[Bultreys et al. 2018]: https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 [Raeini, Bijeljic and Blunt 2017]: https://doi.org/10.1103/PhysRevE.96.013312
 [Dong and Blunt, 2009]: https://doi.org/10.1103/PhysRevE.80.036307
 [libtiff]: https://gitlab.com/libtiff/libtiff
