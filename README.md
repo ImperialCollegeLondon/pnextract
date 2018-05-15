@@ -5,9 +5,9 @@ It is a re-write of the maximal-ball network extraction algorithm by
 [Dong and Blunt, 2009]. 
 It is used as a base for the generalized network extraction code 
 [Raeini, Bijeljic and Blunt 2017], but it does not contain the modules
-for extracting the generalized network (corner elements).
+for extracting the generalized network (corner elements).   
 The network parameters has been calibrated to reproduce single-phase flow 
-properties, and water-wet relative permeability for a set of sandstone rocks.  
+properties, and water-wet relative permeability for a set of sandstone rocks.
 The code uses a new scale-independent shape factor definition to characterize
 pores and throats, published in [Bultry et al. 2018].
 
