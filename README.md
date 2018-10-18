@@ -4,8 +4,8 @@ This code extracts a conventional pore network from a micro-CT image.
 It is a re-write of the maximal-ball network extraction algorithm by 
 [Dong and Blunt, 2009]. 
 It is used as a base for the generalized network extraction code 
-[Raeini, Bijeljic and Blunt 2017], but it does not contain the modules
-for extracting the generalized network (corner elements).   
+[Raeini, Bijeljic and Blunt 2017], sponsored by [TOTAL]. However, here the modules
+for extracting the generalized network elements (corners) are not included.   
 The network parameters has been calibrated to reproduce single-phase flow 
 properties, and water-wet relative permeability for a set of sandstone rocks.
 The code uses a new scale-independent shape factor definition to characterize
@@ -14,7 +14,7 @@ pores and throats, published in [Bultreys et al. 2018].
 
 
 ### Instructions
-A sample input file, Image.mhd, is provided in the doc folder, in ascii 
+A sample input file, [Image.mhd](doc/Image.mhd), is provided in the [doc](doc/) folder, in ascii 
 (text) format. Please use this file together with a 8-bit micro-CT 
 image, similar to the [Images on our website].
 
@@ -65,3 +65,4 @@ https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 [Dong and Blunt, 2009]: https://doi.org/10.1103/PhysRevE.80.036307
 [libtiff]: https://gitlab.com/libtiff/libtiff
 [libz]: https://github.com/madler/zlib
+[TOTAL]: https://www.total.com
