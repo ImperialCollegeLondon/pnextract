@@ -22,7 +22,7 @@ To extract a pore network, decompress the [bin/pnextract.exe.7z](bin/pnextract.e
 and run, in a Windows Command Prompt:   
    bin\pnextract.exe  Image.mhd
    
-See the [pnextract wiki](https://github.com/aliraeini/pnextract/wiki) for more instructions!
+See the [pnextract wiki](https://github.com/aliraeini/pnextract/wiki/pnextract-FAQ) for more instructions!
 
 ###  Build instructions:
 The code is already compiled to bin/pnextract.exe, a Win64 executable, using mingw compilers.
