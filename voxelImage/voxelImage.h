@@ -27,6 +27,7 @@ Ali Q Raeini:    a.qaseminejad-raeini09@imperial.ac.uk
 #include <memory>
 #include <algorithm>
 #include <numeric>
+#include <functional>
 
 
 #include "vec3.h"
