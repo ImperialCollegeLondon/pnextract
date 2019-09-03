@@ -1,6 +1,6 @@
 ##################### settings to adjust from here   ###################
 
-psCXX ?= g++-6
+psCXX ?= g++
 
 psCFLAGS ?= -std=c++11  
 #-O3 -Wall -pedantic
