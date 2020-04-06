@@ -12,6 +12,7 @@ The code uses a new scale-independent shape factor definition to characterize
 pores and throats, published in [Bultreys et al. 2018].
 
 
+***Please consider using [pnflow repository](https://github.com/aliraeini/pnflow) insead, which includes both pnextract and pnflow codes and is more regularly updated.***
 
 ### Instructions
 A sample input file, [Image.mhd](doc/Image.mhd), is provided in the [doc](doc/) folder, in ascii 
