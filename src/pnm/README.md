@@ -13,7 +13,7 @@ pores and throats, published in [Bultreys et al. 2018].
 
 ----------------------------------------
 
-*** Note this repository is same as [pnflow repository](https://github.com/aliraeini/pnflow) but without the pnflow code. ***
+***Note this repository is same as [pnflow repository](https://github.com/aliraeini/pnflow) but without the pnflow code.***
 
 ----------------------------------------
 
