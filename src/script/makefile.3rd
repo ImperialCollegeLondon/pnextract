@@ -1,0 +1,70 @@
+
+
+#note hypreSeq should be bult before hypre
+
+allSubdirs:=$(shell ls -d */ | grep  -v [\ \(\)-] | sed 's/\///g')
+$(warning $(allSubdirs) )
+all: $(allSubdirs)
+
+.PHONY:  clean $(allSubdirs)
+
+msRoot ?= $(abspath ..)
+$(info msRoot set to ${msRoot})
+
+
+CmakeOpts= -DBUILD_SHARED_LIBS=False  -DCMAKE_INSTALL_PREFIX=${msRoot}  -DCMAKE_TOOLCHAIN_FILE=${msRoot}/src/script/toolchain${OPT}.txt
+
+
+ms3rd ?= ${CURDIR}
+$(info ms3rd set to ${ms3rd})
+
+
+msBuild=${msRoot}/build
+
+
+biltT=$(shell [ -d ${ms3rd}/libtiff ] && [ ! -f ${msRoot}/lib/libtiffxx.a ] && echo Tiff)
+libtiff:
+	[ "Tiff" != "$(biltT)" ] || (mkdir -p $(msBuild)/libtif )
+	[ "Tiff" != "$(biltT)" ] || (cd       $(msBuild)/libtif && cmake ${CmakeOpts} ${ms3rd}/libtiff)
+	[ "Tiff" != "$(biltT)" ] || (cd       $(msBuild)/libtif && make -j install)
+
+
+biltHP=$(shell [ -d ${ms3rd}/hypre/src ] && [ ! -f ${msRoot}/lib/libHYPRE.a ] && echo Hypre)
+hyprePar: 
+	[ "Hypre" != "$(biltHP)" ] || (mkdir -p $(msBuild)/hypre )
+	[ "Hypre" != "$(biltHP)" ] || (cd       $(msBuild)/hypre &&  cmake ${CmakeOpts} ${ms3rd}/hypre/src )
+	[ "Hypre" != "$(biltHP)" ] || (cd       $(msBuild)/hypre && make -j install)
+
+
+biltH=$(shell [ -d ${ms3rd}/hypre/src ] && [ ! -f ${msRoot}/lib/libHYPRESeq.a ] && echo HypreSeq)
+hypre: 
+	[ "HypreSeq" != "$(biltH)" ] || (mkdir -p $(msBuild)/hypreSeq )
+	[ "HypreSeq" != "$(biltH)" ] || (cd       $(msBuild)/hypreSeq &&  cmake  -DHYPRE_WITH_MPI=OFF  -DHYPRE_SEQUENTIAL=ON ${CmakeOpts} ${ms3rd}/hypre/src )
+	[ "HypreSeq" != "$(biltH)" ] || (cd       $(msBuild)/hypreSeq && make -j install)
+	[ "HypreSeq" != "$(biltH)" ] || (mv    ${msRoot}/lib/libHYPRE.a  ${msRoot}/lib/libHYPRESeq.a)
+
+#hypreDbg:
+#	(cp -r hypre-2.11.2 hypre-2.11.2Dbg)
+#	(cd hypre-2.11.2Dbg/src && ./configure --enable-debug --without-MPI   --without-fei  CC=gcc-6  F77=gfortran CPP=g++-6  CXX=g++  AR=ar\ -rcu   RANLIB=ranlib ) 
+#	(cd hypre-2.11.2Dbg/src && make)
+
+
+biltZ=$(shell [ -d ${ms3rd}/zlib ] && [ ! -f ${msRoot}/lib/libz.a ] && echo Zlib)
+zlib:
+	[ "Zlib"  != "$(biltZ)" ] || (mkdir -p $(msBuild)/zlib )
+	[ "Zlib"  != "$(biltZ)" ] || (cd       $(msBuild)/zlib &&  cmake ${CmakeOpts} ${ms3rd}/zlib)
+	[ "Zlib"  != "$(biltZ)" ] || (cd       $(msBuild)/zlib && make -j install)
+#zlib:
+#	[ -f ${msRoot}/include/zfstream.h ] || cp ${ms3rd}/zfstream/zfstream.h ${msRoot}/include/
+
+biltF=$(shell [ -d foamx3m ] && [ ! -f ${msRoot}/lib/libfiniteVolume*.so ] && echo Foam)
+foamx3m:
+	[ "Foam"  != "$(biltF)" ] || (cd foamx3m     && ./AllMake)
+	[ "Foam"  != "$(biltF)" ] || (cd foamx3m     && ./AllInstall)
+
+
+clean: 
+	(cd foamx3m  2>/dev/null  &&  ./AllDistclean) || echo !!
+
+distclean: 
+	(cd foamx3m  2>/dev/null  &&  ./AllDistclean) || echo !!

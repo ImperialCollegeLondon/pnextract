@@ -1,0 +1,443 @@
+################# settings to adjust from here or bashrc  ##############
+
+msCXX ?= g++
+
+
+
+# Note: add -std=c++11 manually if you set msCFLAGS
+ifdef USE_CPP17
+ msCXX = g++-7
+ msCFLAGS += -std=c++17 -MMD -MP 
+else
+ msCFLAGS += -std=c++11 -MMD -MP
+endif
+
+# $(info msCFLAGS set to ${msCFLAGS})
+
+#-O3 -Wall -pedantic
+
+# msSrc=
+# msRoot=
+# msBinDir=
+
+#link to relative path to exe
+#msCFLAGS ?= -Wl,-rpath,'$ORIGIN/../lib' 
+
+
+
+############# set via makefile of individual applications ##############
+
+# USE_TIFF=1
+# USE_ZLIB=1
+# USE_OMP=1
+
+
+
+
+#Note: for debugging find&replace @${msCXX} with ${msCXX} in this file
+
+
+
+
+########################################################################
+####################### do not change here after   #####################
+
+
+
+ifndef msSrc
+ # set msSrc to upper directory if not already set
+ msSrc := $(abspath $(lastword $(MAKEFILE_LIST))/../..)
+ $(info msSrc set to ${msSrc})
+endif
+
+msRoot ?= $(abspath ${msSrc}/..)
+
+# set msBinDir if not set
+msBinDir ?= ${msRoot}/bin
+msLibDir ?= ${msRoot}/lib
+
+
+
+
+
+
+
+
+
+
+
+InDir=In $(notdir $(abspath $(dir $(PWD))))/$(notdir $(PWD)): ***  
+
+msReleaseDate ?= \"$(shell date +'%Y.%m.%d')\"
+
+
+msCFLAGS += -I${msSrc}/include -I${msRoot}/include -DRELEASE_DATE=$(msReleaseDate) -D_FILE_OFFSET_BITS=64
+msLFLAGS += -L$(msLibDir)
+
+
+
+ifeq (${USE_VXIMG},1)
+ ifdef USED_VXLIB
+   $(info $(InDir) using voxlib instead of libvoxel)
+ else 
+   msCFLAGS += -I${msSrc}/libvoxel
+ endif
+endif
+
+
+
+# set thirdparty directory if not set
+ifndef ms3rd
+ ifneq ("$(wildcard ${msSrc}/thirdparty/)","")
+  ms3rd := ${msSrc}/thirdparty
+ else
+  ifneq ("$(wildcard ${msRoot}/thirdparty/)","")
+   ms3rd := ${msRoot}/thirdparty
+  endif
+ endif
+ #$(info ms3rd set to ${ms3rd})
+endif
+
+
+# set libtiff install directory: TIFDIR
+ifdef USE_TIFF
+ TIFDIR?=${msRoot}
+ ifneq ("$(wildcard ${TIFDIR}/include/tiff.h)","")
+   msCFLAGS += -I${TIFDIR}/include -DTIFLIB 
+   msLFLAGS += -L${TIFDIR}/libtiff -ltiff -ltiffxx
+
+   ifneq ($(shell ${msCXX} -ljpeg 2>&1 | grep ljpeg > /dev/null; echo $$?),0)
+       msLFLAGS += -ljpeg 
+   else
+     $(info ignoring jpeg)
+   endif
+
+   ifneq ($(shell ${msCXX} -llzma 2>&1 | grep llzma > /dev/null; echo $$?),0)
+      msLFLAGS += -llzma 
+   endif
+
+ else
+   $(info $(InDir) tiff.h not found in ${TIFDIR}/include, nor in ${msRoot}/include/, ignoring USE_TIFF)
+ endif
+endif
+
+#-pedantic -static # -lstdc++ -lm
+
+# set zlib directory
+# Note: ${ZLIBDIR}/contrib/iostream3/zfstream.h should be installed too
+ifdef USE_ZLIB
+ ZLIBDIR?=${msRoot}
+ ifneq ("$(wildcard ${ZLIBDIR}/include/zlib.h)","")
+   msCFLAGS += -I$ ${ZLIBDIR}/include -DZLIB
+   msLFLAGS += -L$ ${ZLIBDIR}/lib -lz
+ else
+   $(info $(InDir) ZLIBDIR, ${ms3rd}/zlib/zlib.h, not found, ignoring USE_ZLIB)
+ endif
+endif
+
+
+
+# set hypre directory, also gnflow multithreading
+ifdef USE_HYPRE
+ HYPREDIR=${msRoot}
+ ifeq ("$(wildcard ${HYPREDIR}/include/HYPRE.h)","")
+   HYPREDIR=${ms3rd}/hypre/src/hypre
+ endif
+ ifneq ("$(wildcard ${HYPREDIR}/include/HYPRE.h)","")
+  msCFLAGS += -DHAVE_CONFIG_H -DHYPRE_TIMING -I${HYPREDIR}/include  -DMULTITHREAD
+  msLFLAGS += -pthread  ${HYPREDIR}/lib/libHYPRE.a 
+ else
+   $(info $(InDir))
+   $(error HYPREDIR, ${HYPREDIR}/include/HYPRE.h, not found)
+ endif
+endif
+
+
+
+# set hypre directory, also gnflow multithreading -DMULTITHREAD
+ifdef USE_HYPRESEQ
+ HYPREDIR=${msRoot}
+ ifeq ("$(wildcard ${HYPREDIR}/include/HYPRE.h)","")
+   HYPREDIR=${ms3rd}/hypre/src/hypre
+ endif
+ ifneq ("$(wildcard ${HYPREDIR}/include/HYPRE.h)","")
+  msCFLAGS += -DHAVE_CONFIG_H -DHYPRE_TIMING -I${HYPREDIR}/include
+  msLFLAGS += -pthread  ${HYPREDIR}/lib/libHYPRESeq.a 
+ else
+   $(info $(InDir))
+   $(error HYPREDIR, ${HYPREDIR}/include/HYPRE.h, not found)
+ endif
+endif
+
+
+
+
+
+ifdef USE_SVG
+ ifneq ("$(wildcard ${ms3rd}/svplot/svplot.hpp)","")
+   msCFLAGS += -I${ms3rd}/svplot -DSVG
+ else
+   $(info $(InDir) ignoring USE_SVG, ${ms3rd}/svplot/svplot.hpp, not found)
+ endif
+endif
+
+
+
+
+# Warning: VTK-8.9 and upwards do not work on tesla3&4(Ubuntu16)
+ifdef USE_VTK 
+ msCMAKFLAGS := ${msCmakeFLAGS}  -DVTK_DIR:PATH=${HOME}/.local/lib/cmake/vtk-8.2  -DCMAKE_INSTALL_PREFIX=${msRoot} 
+endif
+
+
+
+ifneq "${OPT}" ".exe"
+ # set openMP for parallel image processing, mesh generation ... 
+ # not yet integrated with the "released" codes due to portability concerns / too experimental 
+ ifdef USE_OMP 
+  msCFLAGS += -DOpenMP -I/usr/include/mpi -fopenmp
+  msLFLAGS += -L/usr/lib/openmpi/lib -lmpi_cxx -lmpi -lopen-rte -lopen-pal -ldl -Wall -fopenmp
+ endif
+endif
+
+ifeq ($(USE_XDMF),1)
+   msCFLAGS += -I${msSrc}/Xdmf -DXDMF  
+endif
+
+#$(info msCFLAGS: ${msCFLAGS})
+
+ifdef USE_MINIFOAMX3
+  WM_PROJECT_DIR ?= ${ms3rd}/foamx3m
+  WM_PROJECT ?= foam
+  WM_OSTYPE  ?= POSIX
+  SO         ?= ext3.so
+  # this could cause conflicts if openfoam is compiled differently:
+  WM_MPLIB   ?= SYSTEMOPENMPI
+
+#  $(info $(WM_PROJECT_DIR)/wmake/rules/linux64Gcc/mplib$(WM_MPLIB))
+
+  include $(WM_PROJECT_DIR)/wmake/rules/linux64Gcc/mplib$(WM_MPLIB)
+  WM_PRECISION_OPTION ?= DP
+  WM_ARCH ?= linux64
+  LIB_SRC            = $(WM_PROJECT_DIR)/src
+  GFLAGS     = -D$(WM_ARCH) -DWM_$(WM_PRECISION_OPTION)
+
+  GFLAGS += -Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor  -DNoRepository -ftemplate-depth-200
+  #$(info GFLAGS: $(GFLAGS))
+
+  msCFLAGS += $(PFLAGS) $(PINC) $(GFLAGS)
+
+
+
+  findOFsubdirs = $(shell find $(LIB_SRC)/$(dir) -type d ! -name 'lnInclude')
+  ofIncDirs = $(foreach dir,$(OFincs) $(WM_PROJECT) OSspecific/$(WM_OSTYPE),$(findOFsubdirs))
+  OFCFLAGS += $(addprefix -I,$(ofIncDirs)) 
+#  $(info $(ofIncDirs))
+  
+  msLFLAGS += $(PLIBS) -Wl,-rpath-link=${msRoot}/lib  $(addprefix -l:lib,$(addsuffix .$(SO),$(OFlibs) $(WM_PROJECT)))
+
+
+  OFObj2C = $(subst ${msBuildDir}/,,$(subst __,/,$(subst ++,..,$(subst .Obj,.C,$@))))
+  OFC2Obj = $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(OFCs:.C=.Obj))))
+  OFC2dep = $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(OFCs:.C=.d))))
+  
+  objs += $(OFC2Obj)
+  deps += $(OFC2dep)
+else
+  SO         ?= .so
+endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+#########################################################################
+### defaults to be included in makefiles by setting USE_msMAKE=1
+#########################################################################
+
+# WARNING: last make should be called from inside source folder  ########
+
+
+# check and otherwise set default name for executable
+makFilDir:=${CURDIR}
+ifndef exec
+ exec:=$(shell basename ${CURDIR})${OPT}
+endif
+
+
+# set build and test directories here, lib and bin are set through bashrc file
+msBuildDir ?= ${msRoot}/build/${exec}
+msTestDir ?= ${msRoot}/test/${exec}
+
+psAppDirs:
+	$(info  BuildDir: ${msBuildDir},   BinDir: $(msBinDir))
+	@mkdir -p $(msBinDir)
+	@mkdir -p ${msBuildDir}
+
+msLibDirs:
+	$(warning  BuildDir: ${msBuildDir},  LibDir: $(msLibDir))
+	@mkdir -p $(msLibDir)
+	@mkdir -p ${msBuildDir}
+
+msTstDirs:
+	@mkdir -p ${msTestDir}
+
+
+
+
+
+ifeq "${OPT}" "dbg"
+ msCFLAGS += -g -fno-inline  -D_debugCompile_  -D_extraCompile_ ${CFLAGSExtra} 
+else
+ msCFLAGS += -O3  ${CFLAGSExtra}
+endif
+
+
+##########################################single-source .cpp app:
+ifdef USE_SINGLECPP
+$(warning  Building single-source apps)
+cpp2d := $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.d))))
+cpp2o := $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.o))))
+o2cpp = $(subst ${msBuildDir}/,,$(subst __,/,$(subst ++,..,$(subst .o,.cpp,$@))))
+
+$(cpp2o): $(o2cpp)
+	@echo  Compiling  $(o2cpp) '>>' $@
+	@${msCXX} ${msCFLAGS} -c $(o2cpp)   -o $@
+
+$(apps): psAppDirs $(cpp2o) 
+	@echo  Building  $(cpp2o) '>>' $@
+	@${msCXX} $(cpp2o)  -o $(msBinDir)/$@ ${msLFLAGS}
+ 
+-include $(cpp2d)
+
+.PHONY:  clean $(cpp2d)
+
+clean:
+	$(RM) $(cpp2o) $(cpp2d)
+endif
+
+
+
+############## compile Cmake app/lib ###############.
+ifdef USE_msCMAKE
+msCApp:
+	mkdir -p  ${msBuildDir}
+	(cd       ${msBuildDir} &&  cmake $(msCMAKFLAGS) -DmsSrc=${msSrc} $(makFilDir))
+	(cd       ${msBuildDir} &&  make VERBOSE=1 )
+	cp ${msBuildDir}/${exec} $(msBinDir)
+else
+  msCApp: ; $(error msCApp target should be used togather with USE_msCMAKE=1, $^)
+endif
+####################################################'
+
+
+
+
+
+
+######### compile single app source files #########.
+ifdef USE_msMAKE
+
+  $(info Building ${CURDIR} -> ${exec})
+  
+  # recursively include subfolders
+  _rI = $(addprefix -I,$(shell find $(1) -type d)) 
+  
+  # convert .cpp file paths to .o, .d and vise versa
+  o2cpp = $(subst ${msBuildDir}/,,$(subst __,/,$(subst ++,..,$(subst .o,.cpp,$@))))
+  cpp2o = $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.o))))
+  cpp2d = $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.d))))
+
+
+
+
+  objs += $(cpp2o)
+  deps += $(cpp2d)
+
+
+msApp: psAppDirs $(objs)
+	@echo  Building $(msBinDir)/${exec}
+	@${msCXX}  $(objs) -o $(msBinDir)/${exec} ${msLFLAGS}
+
+
+msLib: psAppDirs $(objs)
+	@mkdir -p $(msLibDir)
+	@echo  Building $(msLibDir)/${exec}
+	@${msCXX} $(objs) -shared -o $(msLibDir)/lib${exec}.${SO} ${msLFLAGS}
+
+
+
+.PHONY: clean ${deps}
+
+clean:
+	$(RM) $(objs) ${deps}
+
+
+-include ${deps}
+
+
+${msBuildDir}/%.Obj: $(OFObj2C)
+	@echo  'Compiling $(OFObj2C) *'
+	@${msCXX}  ${msCFLAGS} ${OFCFLAGS} ${EXTRACFLAGS} -c $(OFObj2C) -o $@
+
+${msBuildDir}/%.o: $(o2cpp)
+	@echo  'Compiling $(o2cpp) *'
+	@${msCXX}  ${msCFLAGS}  ${EXTRACFLAGS} -c $(o2cpp) -o $@
+
+# this is a note only, for how to use nmake in Windows, will not work with complex makefiles
+# "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64_x86\vcvarsamd64_x86.bat"
+# nmake
+winVS:
+	@cl -I..\libf2c /nologo /MT /EHsc /Ox  ${srcs} ..\..\bin\vcf2c.lib  /link -LARGEADDRESSAWARE /out:..\bin\gnflow_VS.exe
+	@del *.obj
+
+else
+  msApp: ; $(error msApp target should be used togather with USE_msMAKE=1)
+endif
+####################################################'
+
+
+
+
+
+#################### run tests ####################.
+ifdef USE_msTEST
+  # t_ is needed to stop make from confusing input and targets (which have the same name here)
+  tst2test := $(addprefix t_${msTestDir}/,$(subst /,__,$(subst ..,++,$(tsts))))
+  test2tst = $(subst t_${msTestDir}/,,$(subst __,/,$(subst ++,..,$@)))
+  inp2app = $(lastword $(subst _, ,$(subst .sin,,$@)))
+
+t_${msTestDir}/%.mhd: $(test2tst)
+	cp $(test2tst) ${msTestDir}/
+
+t_${msTestDir}/%.sin: $(test2tst)
+	@echo detecting app from *_app.sin=="$@": $(inp2app)
+	$(msSrc)/script/testApp "${msTestDir}"  $(inp2app) "${CURDIR}/$(test2tst)"  "${msRoot}"
+
+t_${msTestDir}/%.py: $(test2tst)
+	echo python3 "${CURDIR}/$(test2tst)"
+	$(msSrc)/script/testApp "${msTestDir}"  python3 "${CURDIR}/$(test2tst)"
+
+t_${msTestDir}/%.cpp: $(test2tst)
+	echo ${msCXX}
+	${msCXX} -std=c++11 $(test2tst) -o $@
+	$(msSrc)/script/testApp "${msTestDir}"  "${CURDIR}/$@" "${CURDIR}/$(test2tst)"
+
+t_${msTestDir}/%.sh:
+	$(msSrc)/script/testApp "${msTestDir}" "${CURDIR}/$(test2tst)"
+#	(cd ${msTestDir} && $(test2tst))
+
+test: msTstDirs $(tst2test) 
+	@echo  All tests finished $(tst2test) ${msTestDir}/
+ 
+.PHONY:  clean test 
+endif
+####################################################'

@@ -1,6 +1,6 @@
 
-## Minified libtiff: unnecassary  files (test,man,...) are deleted.
-## For full version see https://gitlab.com/libtiff/libtiff
+## Minified libtiff for use in: https://github.com/aliraeini/libvoxel.
+## For the original libtiff, see: https://gitlab.com/libtiff/libtiff
 
 
 
@@ -38,8 +38,11 @@ Source code repository
 Bug database
 ------------
 
-[Bugzilla](http://bugzilla.maptools.org/buglist.cgi?product=libtiff)
+[GitLab issues](https://gitlab.com/libtiff/libtiff/issues)
 
+Previously, the project used
+[Bugzilla](http://bugzilla.maptools.org/buglist.cgi?product=libtiff). This
+is no longer in use, and all remaining issues have been migrated to GitLab.
 
 Use and Copyright
 -----------------

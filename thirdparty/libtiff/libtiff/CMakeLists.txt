@@ -93,6 +93,7 @@ set(tiff_SOURCES
   tif_tile.c
   tif_version.c
   tif_warning.c
+  tif_webp.c
   tif_write.c
   tif_zip.c
   tif_zstd.c)
@@ -103,7 +104,7 @@ set(tiffxx_HEADERS
 set(tiffxx_SOURCES
   tif_stream.cxx)
 
-if(WIN32_IO)
+if(USE_WIN32_FILEIO)
   extra_dist(tif_unix.c)
   list(APPEND tiff_SOURCES tif_win32.c)
 else()

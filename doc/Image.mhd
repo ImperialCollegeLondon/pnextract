@@ -1,70 +1,76 @@
 ObjectType =  Image
 NDims =       3
 ElementType = MET_UCHAR
+ElementByteOrderMSB = False
 
-DimSize =        1000  1000  1000
-ElementSpacing = 1.6   1.6   1.6
-Offset =         0   0   0
+DimSize =    	1000	1000	1000
+ElementSize = 	1.6 	1.6 	1.6
+Offset =      	0   	0   	0
 
 ElementDataFile = Image.raw.gz
 
-DefaultImageFormat = tif
+//HeaderSize = 0 
+//OutputFormat = .raw.gz 
 
-'______________  optional image processing  commands _________________'
+//!__________  optional image processing (ordered) commands ____________
+//!_________________  remove the '//' to activate  _____________________
 
- ''' crop image to   [ Nxyz_begin  Nxyz_end )'''
-#cropD   0 0 0    300 300 300 
+//! crop image  [  Nxyz_begin    Nxyz_end   )
+//crop               0 0 0       300 300 300 
   
- ''' flip x direction with y or z '''
-#direction z
+//! flip x direction with y or z 
+//direction   z
   
- ''' manipulate voxel values: range [start end]  -> value'''
- ''' replaceRange   start  end   value    '''
-#replaceRange   0      127     0    
-#replaceRange   128    255     1    
+//! manipulate voxel values: range [start end]  -> value
+//! replaceRange   start  end   value   
+//replaceRange       0      127     0    
+//replaceRange       128    255     1    
   
- ''' threshold image: range -> 0 (void-space), rest->1 (solid) '''
-#threshold   0  128 
+//! threshold image: [range] -> 0 (void-space), rest->1 (solid) 
+//threshold           0  128 
 
 
- ______________________________________________________________________
- 
-''' Format Specifications:
- All keyword data should be provided in a single line.
- 
- The first unrecognised keyword together with the rest of the file will
- be ignored. 
 
 
- DNS/PNM codes can read .tif, .raw.gz, .raw and .txt/.dat files. The 
- format is detected based on the suffix of the image, given by 
- ElementDataFile keyword.
 
- When the image format is .raw or .raw.gz, this file can be opened in 
- ImageJ/Fiji or Paraview to load the image.  
+//! ### Format Specifications:
+//! All keyword data should be provided in a single line.
+//! 
+//! The first unrecognised keyword together with the rest of the file will
+//! be ignored. 
 
- When using .raw.gz, .raw and the image is not UChar and not written 
- in little-endian, add the following keyword before the ElementDataFile
- (voxelImage ignotres this):
-   ElementByteOrderMSB = True
 
- = is used only in the standard mhd keywords (the first 10 lines) but
- not in the DNS/PNM commands and keywords.
+//! DNS/PNM codes can read .tif, .raw.gz, .raw and .txt/.dat files. The 
+//! format is detected from image suffix, given by the ElementDataFile keyword.
 
- When the image is in .tif format, all the keywords can be dropped, but 
- to ensure the voxel-size is correct the keywords ElementSpacing and
- Offset can be provided to override those read from .tif tags. 
- In .tif format, the keyword DimSize is redundant and hence ignored.
+//! When the image format is .raw or .raw.gz, this file can be opened in 
+//! ImageJ/Fiji or Paraview to load the image.  For tif images, you should
+//! open the .tif file directly.
 
- lines BEGINING with "#" and "'" are considered as comments and skipped, 
- but no comment is allowed before the keyword ElementDataFile.
- "'" doesn't apply multiline comments; it only highlighs, see below.
+//! When using .raw.gz, .raw and the image is not UChar and not written 
+//! in little-endian, add the following keyword before the ElementDataFile
+//! (voxelImage ignotres this):
+//!  ElementByteOrderMSB = True
 
- A syntax highlighting hack: associate the .mhd suffix with python: 
- In geany in "Tools -> Configuration files -> filetype_extensions.conf"
- or by menu "Document -> Set Filetype -> Scripting Languages -> Python".
- 
- 
-'''
- 
+//! When using .raw.gz image files, for compatibility with Fiji/Paraview, add
+//! the following keyword before the ElementDataFile:
+//!   CompressedData = True
+
+
+//! = is used only in the standard mhd keywords (the first 10 lines) but
+//! not in the DNS/PNM commands and keywords.
+
+//! When the image is in .tif format, all the keywords can be dropped, but 
+//! to ensure the voxel-size is correct the keywords ElementSize and
+//! Offset can be provided to override those read from .tif tags. 
+//! In .tif format, the keyword DimSize is redundant and hence ignored.
+
+//! lines BEGINING with "#" and "//" are considered as comments and skipped, 
+//! but no comment is allowed before the keyword ElementDataFile.
+
+//! A syntax highlighting hack: associate the .mhd suffix with C++: 
+//! In geany in "Tools -> Configuration files -> filetype_extensions.conf"
+//! or by menu "Document -> Set Filetype -> Programming Languages -> C++".
+
+
 

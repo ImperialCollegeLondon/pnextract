@@ -1,0 +1,317 @@
+#!/bin/bash
+
+
+
+[ -n "$msBinDir" ] || echo source $(dirname "${BASH_SOURCE[0]}")/../bashrc
+[ -n "$msBinDir" ] || source $(dirname "${BASH_SOURCE[0]}")/../bashrc
+
+echo "msBinDir: $msBinDir"
+
+# directory of single-phase script and base cases:
+SP_SCRIPTS=$msSrc/porefoam1f/script
+export SP_SCRIPTS
+# directory of two-phase script and base cases:
+TWOPHASE_SCRIPTS=$msSrc/porefoam2f/script
+export TWOPHASE_SCRIPTS
+
+
+
+## run an up and redirect output to log file   -------------------------
+runApp()
+{
+    LOG_NAME=
+    while getopts "l:" OPTFLAG ; do
+        LOG_NAME=$OPTARG
+        shift $((OPTIND-1)) ; OPTIND=1
+    done
+
+    APP_RUN=$1; shift
+    APP_NAME=${APP_RUN##*/}
+
+    if [ -z $LOG_NAME ] ; then
+        LOG_NAME=log.$APP_NAME
+    fi
+
+    if [ -f $LOG_NAME ] ; then
+        echo "$APP_NAME already run on $PWD: remove log file to run:"
+        echo "  rm $PWD/$LOG_NAME"
+    else
+        echo "Running $APP_NAME $@  >  $PWD/$LOG_NAME"
+        $APP_RUN "$@" > $LOG_NAME 2>&1
+        [[ $? == 0 ]] || echo "Error: $APP_RUN  $@,  exit status: $?, see $(pwd)/$LOG_NAME" >&2
+    fi
+    sleep .1
+
+}
+
+
+runMPI()
+{
+    LOG_NAME=
+    while getopts "l:" OPTFLAG ; do
+        LOG_NAME=$OPTARG
+        shift $((OPTIND-1)) ; OPTIND=1
+    done
+
+    APP_RUN=$1; shift
+    np=$1; shift
+    APP_NAME=${APP_RUN##*/}
+
+    if [ -z $LOG_NAME ] ; then
+        LOG_NAME=log.$APP_NAME
+    fi
+
+    if [ -f $LOG_NAME ] ; then
+        echo "$APP_NAME already run on $PWD: remove log file to run:"
+        echo "  rm $PWD/$LOG_NAME"
+    elif [ "$np" == "1" ] ; then
+        echo "Running $APP_NAME $@  >  $PWD/$LOG_NAME"
+        $APP_RUN "$@" > $LOG_NAME 2>&1		
+    else
+        echo "Running $APP_NAME $@  >  $PWD/$LOG_NAME , using $np processes"
+        #~ ( mpirun -x LD_LIBRARY_PATH -x PATH -x WM_PROJECT_DIR -x WM_PROJECT_INST_DIR -x MPI_BUFFER_SIZE         --mca btl_tcp_if_exclude lo --mca btl_tcp_if_exclude eth0:avahi  --hostfile  machines.txt -np $np $APP_RUN  -parallel "$@" < /dev/null > $LOG_NAME 2>&1 )
+        ( mpirun.openmpi  -np $np $APP_RUN -parallel "$@" < /dev/null > $LOG_NAME 2>&1 )
+        [[ $? == 0 ]] || echo "Error: $APP_RUN -parallel $@,  exit status: $?, see $(pwd)/$LOG_NAME" >&2
+    fi
+    sleep .1
+}
+
+runDistributed()
+{
+    LOG_NAME=
+    while getopts "l:" OPTFLAG ; do
+        LOG_NAME=$OPTARG
+        shift $((OPTIND-1)) ; OPTIND=1
+    done
+
+    APP_RUN=$1; shift
+    np=$1; shift
+    APP_NAME=${APP_RUN##*/}
+
+    if [ -z $LOG_NAME ] ; then
+        LOG_NAME=log.$APP_NAME
+    fi
+
+    if [ -f $LOG_NAME ] ; then
+        echo "$APP_NAME already run on $PWD: remove log file to run:"
+        echo "$PWD/$LOG_NAME"
+    else
+        echo "Running $APP_NAME $@  >  $PWD/$LOG_NAME , using $np processes"
+        ( mpirun.openmpi -x LD_LIBRARY_PATH -x PATH -x WM_PROJECT_DIR -x WM_PROJECT_INST_DIR -x MPI_BUFFER_SIZE \
+          --mca btl_tcp_if_exclude lo,eth0:avahi --hostfile $SP_SCRIPTS/machines.txt \
+          -np $np $APP_RUN  -parallel "$@" < /dev/null > $LOG_NAME 2>&1 )
+        #~ ( mpirun -np $np $APP_RUN  -parallel "$@" < /dev/null > $LOG_NAME 2>&1 )
+        [[ $? == 0 ]] || echo "Error: $APP_RUN -parallel $@,  exit status: $?, see $(pwd)/$LOG_NAME" >&2
+
+    fi
+    sleep .1
+}
+
+
+
+### dictionary helpers  ------------------------------------------------
+
+
+setKeywordValues()  {  sed -i 's/^[ \t]*'"$1"'[ \t:].*$/'"    $1   $2; "'/g' $3;  }
+
+addSetKeyValue()
+{
+   ( grep -q -G "^[ \t]*$1" $3 && sed -i 's/^[ \t]*'"$1"'[ \t:].*$/'" $1     $2 ;"'/g' $3 ) || echo " $1     $2 ;"  >> $3
+}
+
+strKeyValueOr()
+{
+   dflt=$3 ; [ -n "$dflt" ] || dflt=$4
+   echo "$1" |  ( grep -aG "^[ \t]*$2" || echo $2 = $dflt ) | sed 's/'"$2"'//' | sed 's/;.*//' | sed 's/[:= \t]*$//g' | sed 's/^[:= \t]*//g'
+}
+
+setSubKeywordValues()  {  sed -i '/'"$1"'/,/\}/s/^[ \t]*'"$2"'[ \t].*$/'"       $2   $3; "'/' $4 ; }
+
+setBoundaryCondition()  {  sed -i '/'"$1"'/,/\}/s/^[ \t]*'"$2"'[ \t].*$/'"       $2   $3; "'/' $4 ;  }
+
+setValues() {   sed -i 's/'"$1"'/'"$2"'/g' $3 ; }
+
+deleteFromBC()  {  sed -i '/'"$1"'/,/\}/s/^'"$2"'.*$/\/\/'" $2   "'/' $3;  }
+
+
+setfirstKeywordValue()  {  sed -i '0,/^[ \t]*'"$1"' .*$/s//'" $1  $2; "'/' $3 ;  }
+
+
+setParallelBC()  {  sed -i '/'"$1"'/,/\}/s/'"$2"' .*$/'" $2      $3; "'/' $4 ;  }
+
+replaceValues()  {  sed -i 's/'"$1"'/'"$2"'/g' $3 ;  }
+
+
+deleteKeyword()  {  sed -i '/'"$1"'/,/\;/s/^/\/\//' $2;  }
+
+
+delMultiLineBoundaryCondition()
+{
+   # to avoid greedy sed search we split to lines and use the line search feature of 
+   #hint: multi-line sed is crap
+   sed -i '/'"$1"'/,/\}/s/^[ \t]*'"$2"'/'"- TOBEDELETED -\n"'/g' $3 
+   sed -i '/- TOBEDELETED -/,/\;/d' $3 
+}
+
+delBoundaryCondition()
+{ # TODO DELTETE
+   sed -i '/'"$1"'/,/\}/s/^[ \t]*'"$2"'.*$/'"- TOBEDELETED -"'/g' $3 
+   sed -i '/'"$1"'/,/\}/s/^'"$2"'.*$/'"- TOBEDELETED -"'/g' $3
+   sed -i '/^- TOBEDELETED -$/d' $3
+}
+
+delAllBoundaryCondition()
+{
+   # sed -i '/'"$1"'/,/\}/s/^[ \t]*'"$2"'.*$/'"- TOBEDELETED -"'/' $4  ;  sed -i '/^- TOBEDELETED -$/d' $4 
+   sed -i '/^'"$1"'.*$/d' $2 
+}
+
+
+
+calc()  {  awk "BEGIN {print $@}"; }
+
+generateUfMhds()
+{ # hint echo eliminates \ns
+   hdr=`more vxlImage.mhd  | sed 's/MET_UCHAR/MET_FLOAT/' `
+   sizStr=`echo "$hdr" | grep DimSize | sed 's/.*=[ \t]*//'`
+   sizs=(${sizStr// / })
+   dirs=(x y z)
+   for i in "${!sizs[@]}" ; do
+     ((sizs[i]++))
+     vhdr=`echo "$hdr"   | sed 's/vxlImage/Uf'"${dirs[i]}"'/' | sed 's/DimSize.*/DimSize '" =  ${sizs[0]} ${sizs[1]} ${sizs[2]}"'/' `
+     echo "$vhdr" > Uf${dirs[i]}.mhd ; 
+     ((sizs[i]--))
+   done
+}
+
+
+
+generateMhdFile()
+{
+   [ -n "$1" ] || printf "Usage:\n  generateMhdFile Img_240x250x260_3p5.dat\n  generateMhdFile 240x250x260_3p5 Img.mhd"
+   
+   ext=`echo $1 | sed 's/\.gz/_dot_gz/' | grep -F . | sed 's/.*\.//g' | sed 's/_dot_/\./g'` ; echo ext \"$ext\"
+
+   data=${1%.$ext} ;  #data=${data%.raw*} ;  data=${data%.dat*} ;  data=${data%.tif*}
+   echo data $data
+   Img=`( [ -n "$2" ] && echo ${2%.mhd} ) || echo $data`
+   echo "$data . $ext  -> $Img.mhd"
+   if ! [ -f $Img.mhd ]; then
+    echo 
+    echo "guessing size info from   $data"
+
+    N[0]=$(echo $data | sed 's/_/\n/g' | grep [0-9]c | sed 's/[a-Z]//g' )
+    if [ -z ${N[0]} ] ; then
+      N=($(echo $data | sed 's/_/\n/g' | grep [0-9]x[0-9]*x[0-9] | sed 's/x/ /g'))
+    else
+      N[1]=${N[0]}
+      N[2]=${N[0]}
+    fi
+    echo " size: " ${N[0]} ${N[1]} ${N[2]}
+    
+    dx=($(echo $data | sed 's/_/\n/g' | grep [0-9]p[0-9] | tail -1 | sed 's/p/./g' | sed 's/um//g'))
+    if [ -z ${dx[0]} ] ; then
+        dx=($(echo $data | sed 's/_/\n/g' | grep [0-9]um | sed 's/um//g'))
+    fi
+
+	title=$(echo $Img | sed 's/_[0-9]*p[0-9]*/_/g' | sed 's/_[0-9]*c_/_/g' | sed 's/_[0-9]*x[0-9]*x[0-9]*_/_/g' )
+	title=$(echo $title | sed 's/_For_iCore//g'  | sed 's/_Model_/_/g' | sed 's/_uint8_/_/g'  | sed 's/__/_/g'  | sed 's/_$//g' )
+	echo title $title 
+
+	
+	printf "ObjectType =  Image\nNDims =       3\nElementType = MET_UCHAR\n
+		DimSize =     ${N[0]}  ${N[1]}  ${N[2]}
+		ElementSize = $dx   $dx   $dx 
+		Offset =      0      0      0\n
+		ElementDataFile = $Img.$ext\n\n
+		title $title\n
+		" | sed 's/\t//g'   >> $Img.mhd
+
+	
+	echo "file $Img.mhd generated"
+
+ else
+	echo "file $Img.mhd exists"
+ fi
+}
+
+RunRemoveExtras()
+{
+   sleep 0.1
+   rm  -f  0/ccx 0/ccy 0/ccz  
+
+   rm  -f  0/cell* 
+   rm  -f  0/point* 
+   rm  -f  0/*Level
+
+   rm  -f constant/polyMesh/*Level
+   rm  -f  constant/polyMesh/*Zones
+   rm  -f  constant/polyMesh/*History
+   rm  -f  constant/polyMesh/*Index
+   rm  -f log.faceSet.*
+   echo " " ; 
+}
+
+
+RunUpdateBlockMeshDict()
+{
+   mhd=$1
+   SHMRefine=$2
+   nRefin=$3
+   nSkip=$4
+   dict=$5
+:  ${dict:="constant/polyMesh/blockMeshDict"}
+
+   printf "RunUpdateBlockMeshDict  mhd=$1    SHMRefine=$2   nRefin=$3   nSkip=$4 ..-> $dict\n"
+
+
+   DimSize=` more $mhd | grep DimSize  |  head -1 | sed 's/.*DimSize[ \t]*=//' `
+   DimSize=($DimSize)
+   dx=` more $mhd | grep ElementSize  |  head -1 | sed 's/.*ElementSize[ \t]*=//'  | sed 's/e/E/g' `
+   dx=($dx)
+   Offset=` more $mhd | grep Offset  |  head -1 | sed 's/.*Offset[ \t]*=//'  | sed 's/e/E/g' `
+   Offset=($Offset)
+   cropD=`more $mhd | grep cropD | sed 's/cropD //'`
+   if [[ $cropD == [\ 1-9]** ]]; then 
+     cropD=($cropD)
+     printf "  cropD ${cropD[*]} :\n    ** O: ${Offset[*]}; N: ${DimSize[*]} **  \n"; 
+     for ii in 0 1 2 ; do
+       Offset[$ii]=`echo "${dx[$ii]}*${cropD[$ii]}+${Offset[$ii]}" | bc`
+       DimSize[$ii]=$((${cropD[$(($ii + 3))]}-${cropD[$ii]}))
+     done
+     printf "    ** O: ${Offset[*]}; N: ${DimSize[*]} **  \n"; 
+   fi
+   printf "  [X0+N]*dx:    ${Offset[*]}   +  ${DimSize[*]}   *  ${dx[*]}\n"
+
+
+   N[0]=`echo "scale=0; (${DimSize[0]}*$nRefin/$SHMRefine-2*$nSkip/$SHMRefine+0.001)/1.0" | bc`
+   N[1]=`echo "scale=0; (${DimSize[1]}*$nRefin/$SHMRefine-2*$nSkip/$SHMRefine+0.001)/1.0" | bc`
+   N[2]=`echo "scale=0; (${DimSize[2]}*$nRefin/$SHMRefine-2*$nSkip/$SHMRefine+0.001)/1.0" | bc`
+
+
+   printf "  mesh size ?= $SHMRefine * backgound mesh size (${N[*]})\n" 
+
+   #echo  "  echo ${dx[2]}*$nSkip+${Offset[2]}+0.00000000001 | bc   "
+   X1=`echo "${dx[0]}*$nSkip+${Offset[0]}+0.00000000001" | bc` 
+   Y1=`echo "${dx[1]}*$nSkip+${Offset[1]}+0.00000000001" | bc` 
+   Z1=`echo "${dx[2]}*$nSkip+${Offset[2]}+0.00000000001" | bc` 
+
+   X2=`echo "${dx[0]}*(${DimSize[0]}-$nSkip)+${Offset[0]}-0.00000000001" | bc`
+   Y2=`echo "${dx[1]}*(${DimSize[1]}-$nSkip)+${Offset[1]}-0.00000000001" | bc`
+   Z2=`echo "${dx[2]}*(${DimSize[2]}-$nSkip)+${Offset[2]}-0.00000000001" | bc`
+
+   printf "  mesh extents: $X1 $X2   $Y1 $Y2   $Z1 $Z2 (microns)\n"
+   sed -i 's/Nx/'"${N[0]}"'/g'   $dict
+   sed -i 's/Ny/'"${N[1]}"'/g'   $dict
+   sed -i 's/Nz/'"${N[2]}"'/g'   $dict
+
+   sed -i 's/X1/'"$X1"'/g'   $dict
+   sed -i 's/X2/'"$X2"'/g'   $dict
+   sed -i 's/Y1/'"$Y1"'/g'   $dict
+   sed -i 's/Y2/'"$Y2"'/g'   $dict
+   sed -i 's/Z1/'"$Z1"'/g'   $dict
+   sed -i 's/Z2/'"$Z2"'/g'   $dict
+}
+
+
+

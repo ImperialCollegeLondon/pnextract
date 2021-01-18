@@ -1,0 +1,44 @@
+#!/bin/bash
+#cd ${0%/*} || exit 1    # run from this directory
+
+#set -e
+
+myCurDIR=$(cd "$(dirname ${BASH_SOURCE[0]})" && pwd)
+. $myCurDIR/bashrc
+
+
+if [ -z "$msRoot" ] ; then printf "\nError: msRoot is not set\n\n" ; exit; fi
+
+
+if [ -n "$1" ]; then 
+  cases=$1
+else
+  cases="$(ls -d */ | grep -v [\ ] | grep  -v [\)-]/ | sed 's/\///g')"
+fi
+
+
+
+
+for cas in $cases
+do
+  if [ -L "$cas" ]; then
+    echo "rm $cas"
+    rm $cas
+  elif [ -f $cas/Makefile ]; then
+    echo "$cas:"  
+    (cd $cas && make clean)
+  elif [ -f $cas/makefile ]; then
+    echo "$cas:"  
+    (cd $cas && make clean)
+  elif [ -d $cas ]; then
+     echo " skipping $cas"  
+  fi
+done
+
+
+
+
+rm -f  bin/*.d # in case
+rm -f  log log.*
+rm -rf build/*
+rm -f $(find . | grep -F /Make/linux64)

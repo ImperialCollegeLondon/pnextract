@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# run tests using this script to allow report failure/success of the test
+
+#set -ex # exit on any error
+
+tstDir=$1;   tstApp=$2;  tstInp=$3;  apsDir=$4
+
+
+if [ -z "$apsDir" ]; then  apsDir=$(cd "$(dirname ${BASH_SOURCE[0]})/../.." && pwd);  fi
+
+if [ -z "$msRoot" ]; then  echo "source  $apsDir/src/script/bashrc"; source  $apsDir/src/script/bashrc
+else                       [ "$msRoot" == "$apsDir" ] || exit ; fi
+
+checkErr()
+{
+  Er="$(grep -E Error\|terminate\|exception\|': error' $1 || true)" # grep returns 1 (==false) if no match found
+  task=" $(echo $1 | sed 's/log\./  /') *** \n\n"
+  
+  if [ $2 != 0 ]; then    Er+="  Exit code: $2"; fi
+
+  if [ -z "$Er" ]; then    printf "\n *** Succeed @$task"; 
+  else echo "'$Er', in: $1"; printf "\n ***  Failed @$task" ;   fi
+  if xhost >/dev/null 2>&1 ; then
+    if [ -z "$Er" ]; then  notify-send "Succeed @$task" & 
+    else                   notify-send " Failed @$task" & geany "$1" || gedit "$1";  fi
+  fi
+}
+
+
+usage() {
+  printf "Usage:\n  testApp tstDir   tstApp  tstInp  apsDir
+  \nExamples:
+    testApp  /mnt/ramd/tst/Gao2017GNM  gnrun  $msRoot/src/gnm/script/Gao2017_gnrun.sin  $msRoot
+    testApp  $msRoot  make
+    testApp  $msRoot  'make dbg'  '' $msRoot
+    testApp  $msRoot  'make .exe' '' $msRoot\n"; }
+[ -f  "$tstApp" ] || which $tstApp  || (! usage) || exit
+
+
+
+mkdir -p $tstDir
+# Rename input as backup in test folder. If not renamed, gnu-make interprets it as up-to-date and refuses to re-run the test
+[ -n "$tstInp" ] && cp $tstInp $tstDir/input_$(basename $tstApp)_$(basename $tstInp)
+#[ -n "$tstInp" ] && tstInp=$(basename $tstInp)
+
+logf=log.$(basename $(echo $tstApp | sed 's/ \+/_/g'))
+[ -n "$tstInp" ] && logf+=_$(basename $tstInp)
+
+echo  "$tstApp $tstInp >  $tstDir/$logf "
+(cd $tstDir/ && $tstApp   $tstInp > $logf 2>&1 )
+cod=$?
+checkErr "$tstDir/$logf" $cod
+
+exit $cod

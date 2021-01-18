@@ -1,0 +1,71 @@
+#!/bin/make 
+# Makefile for top ($msRoot) directory
+
+msRoot:=${CURDIR}
+msSrc := ${msRoot}/src
+ms3rd := ${msRoot}/thirdparty
+
+curMkfil:=$(lastword $(MAKEFILE_LIST))
+
+nproc = $(shell $(( $nproc < 1 ? 4 : $nproc )))
+nproc = $(shell $(( $nproc > 31 ? 31 : $nproc )))
+
+# Build for Linux
+all: checkRoot
+	mkdir -p lib
+	mkdir -p bin
+	mkdir -p include
+	(cd ${ms3rd} && make -f ${msSrc}/script/makefile.3rd -j${nproc})
+	(cd ${msSrc} && script/AllMake)
+
+
+# Build for Windows
+mgw: checkRoot
+	mkdir -p lib
+	mkdir -p bin
+	mkdir -p include
+	(cd ${ms3rd} && make -f ${msSrc}/script/makefile.3rd -j${nproc} OPT=.exe)
+	(cd ${msSrc} && script/AllMakeMinGW)
+
+
+clean: checkRoot
+	(cd ${ms3rd} && make -f ${msSrc}/script/makefile.3rd  clean)
+	(cd ${msSrc} && script/AllClean)
+	rm -rf  ${msRoot}/build ${msSrc}/*/__pycache__  log.make
+
+distclean: checkRoot clean
+	@echo "\n**********************************************************\nWarning:\n"
+	@echo " deleting log.make, bin/, include/, lib/, share/ and test/"
+	@echo " Entre Ctrl+c to stop, or Entre to proceed?"
+	@echo "\n**********************************************************\n"
+	read   Ctrl_c_or_Entre
+	sleep 2
+	rm -rf   ${msRoot}/bin  ${msRoot}/include  ${msRoot}/lib  ${msRoot}/share ${msRoot}/test
+	(cd ${ms3rd} && make -f ${msSrc}/script/makefile.3rd  distclean)
+
+checkRoot:
+	@printf  "src/script/Makefile.msRoot == ${curMkfil}? "
+	@[ "src/script/Makefile.msRoot" =  "${curMkfil}" ] || (echo Error: ran make from wrong directory && false)
+	@echo  :/
+
+
+
+
+
+
+#TODO ORGANISE tests (unify workflow)
+maketest= ( ! [ -d ${1} ] ) || (echo test ${1} && cd ${1} && make test)  ||  echo "Error failed in ${1} on make test"
+test: checkRoot
+	mkdir -p test
+	@$(call maketest,src/pnm/pnextract)
+	@$(call maketest,src/pnm/pnflow)
+	@$(call maketest,src/libvoxel)
+
+# not used yet
+installDir?=$(HOME)/.local/
+install:
+	mkdir -p $(installDir)bin/
+	cp -r bin  $(installDir)
+	cp -r lib  $(installDir)
+	cp src/bashrc  $(installDir)bin/
+	cp -r src/script $(installDir)bin/
