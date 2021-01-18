@@ -1,0 +1,27 @@
+name: make and test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Cache lib
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/lib
+        key: ${{ runner.os }}-lib
+
+    - name: make
+      run: make -j
+    - name: test
+      run: make test
