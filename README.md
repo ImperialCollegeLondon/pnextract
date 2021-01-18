@@ -1,9 +1,6 @@
-![make and test](https://github.com/aliraeini/pnflow/workflows/make%20and%20test/badge.svg)
+![make and test](https://github.com/aliraeini/pnextract/workflows/make%20and%20test/badge.svg)
 
-##  pnflow - classical pore-network (extraction and) flow simulation
-
-This repository hosts the classical network flow simulation code called pnflow. 
-[pnextract network extraction code](https://github.com/aliraeini/pnextract) is also included [here](src/pnm/pnextract) for convenience.
+##  pnextract - pore-network  extraction code
 
 
  ----------------------------------------------------------------
