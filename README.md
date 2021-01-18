@@ -63,8 +63,8 @@ T Bultreys, Q Lin, Y Gao, A Q Raeini, A AlRatrout, B Bijeljic, and M J Blunt . "
 https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 
 
-[Images on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/micro-ct-images-and-networks/
-[Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
+[Images on our website]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/micro-ct-images-and-networks/
+[Imperial College - pore-scale consortium]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling
 [Bultreys et al. 2018]: https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 [Raeini, Bijeljic and Blunt 2017]: https://doi.org/10.1103/PhysRevE.96.013312
 [Dong and Blunt, 2009]: https://doi.org/10.1103/PhysRevE.80.036307
