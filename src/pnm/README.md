@@ -8,7 +8,7 @@ It is used as a base for the generalized network extraction code
 for extracting the generalized network elements (corners) are not included.   
 The network parameters has been calibrated to reproduce single-phase flow 
 properties, and water-wet relative permeability for a set of sandstone rocks.
-The code uses a new scale-independent shape factor definition to characterize
+The code uses a new resolution-independent shape factor definition to characterize
 pores and throats, published in [Bultreys et al. 2018].
 
 ----------------------------------------
