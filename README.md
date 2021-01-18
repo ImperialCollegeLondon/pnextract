@@ -6,7 +6,10 @@
  ----------------------------------------------------------------
  
  **Please see the [src/pnm](src/pnm), [src/pnm/pnextract](src/pnm/pnextract), and [doc](doc) folders for specific details.**
+ ----------------------------------------------------------------
  
+**Note: this repository is same as [pnflow repository](https://github.com/aliraeini/pnflow) but without the pnflow code.**
+
  ----------------------------------------------------------------
 
 
