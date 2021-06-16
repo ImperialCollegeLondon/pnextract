@@ -195,8 +195,8 @@ ifneq "${OPT}" ".exe"
  # set openMP for parallel image processing, mesh generation ... 
  # not yet integrated with the "released" codes due to portability concerns / too experimental 
  ifdef USE_OMP 
-  msCFLAGS += -DOpenMP -I/usr/include/mpi -fopenmp
-  msLFLAGS += -L/usr/lib/openmpi/lib -lmpi_cxx -lmpi -lopen-rte -lopen-pal -ldl -Wall -fopenmp
+  msCFLAGS += -DOpenMP $(mpic++ -showme:compile) -fopenmp
+  msLFLAGS += $(mpic++ -showme:link)  -fopenmp
  endif
 endif
 
