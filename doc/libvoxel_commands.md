@@ -6,9 +6,9 @@ The list of supported commands by libvxel can be obtained from voxelImageProcess
 
 		voxelImageProcess ?
 
-Specific commands usage can be shown by running:
+For some commands, its usage is shown by running:
 
-		voxelImageProcess ? commandmmand
+		voxelImageProcess ? command
 
 
 Note these are in additional to the mhd header data provided in the top of .mhd files:
@@ -99,6 +99,11 @@ Additional MHD rules:
  
 		replaceRange  200 255      1
 
+
+**keepLargest0**:    
+    Keeps the largest connected region with value of 0, sets the rest to maxT-1 (=254 for 8bit images). 
+    Use this to compute effective porosity.
+
 **write**:    
     Write the image into file
  
@@ -106,12 +111,12 @@ Additional MHD rules:
 		write   image_copy.am
 		write   image_copy.mhd
 
-**writeUchar**:    
+**write8bit**:    
     Write the image as unsigned char    
  
-		writeUchar image_8bit.raw 
-		writeUchar image_8bit.am 
-		writeUchar image_8bit.mhd 
+		write8bit image_8bit.raw 
+		write8bit image_8bit.am 
+		write8bit image_8bit.mhd 
 
 **modeFilter**:    
     Apply  few iterations (first argument) of mode filter, reject mode if frequency less than  second argument   
@@ -174,19 +179,19 @@ Additional MHD rules:
  
 		reset	  N   100  100  100
 		reset	  dx  3e-6 3e-6 3e-6
-		reset	  X0  0.0  0.0  0.0
-		reset	  Nd0 100  100  100   3e-6 3e-6 3e-6   0.0 0.0 0.0
+		reset	  X0  0.  0.  0.
+		reset	  Nd0 100  100  100   3e-6 3e-6 3e-6   0. 0. 0.
 		reset	  dx 3e-6
 
-**shapeToVoxel**:    
+**Paint**:    
     Paint a 3D shape into the image    
  
-		shapeToVoxel     s   30 30 30  10    //<- shape-type(sphere)  Centre:Xc(30,30,30) and radius R=10 
+		Paint     s   30 30 30  10    //<- shape-type(sphere)  Centre:Xc(30,30,30) and radius R=10 
 
-**shapeToVoxelAdd**:    
-    Paints over a 3D shape on the image, increasing the previous voxel values (brightness), otherwise same as shapeToVoxel    
+**PaintAdd**:    
+    Paints over a 3D shape on the image, increasing the previous voxel values (brightness), otherwise same as Paint    
  
-		shapeToVoxelAdd  s  30 30 30  10    //<- shape-type(sphere)  Centre:Xc(30,30,30) and radius R=10
+		PaintAdd  s  30 30 30  10    //<- shape-type(sphere)  Centre:Xc(30,30,30) and radius R=10
 
 
 ------------------------------------
@@ -241,9 +246,3 @@ The following keywords fate in further libvoxel versions shall be reviewed
     writes fraction of voxels of two images having the same value (TODO remove?)
  
 		maskWriteFraction  "maskname.mhd"  "outName.txt"   0    2  1000000
-
-
-**keepLargest0**:    
-    Keeps the largest connected region with value of 0, sets the rest to maxT-1 (=254 for 8bit images). 
-    Use this to compute effective porosity.
-
