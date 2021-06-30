@@ -12,13 +12,6 @@ const static int LEVEL_MAX = 32767;
 #define nAprox 1
 
 
-#ifdef MULTIDIRECTION
-const static int SideImax = 5;
-const static int nBP6 = 6; // 1+SideImax
-#else
-const static int SideImax = 1;
-const static int nBP6 = 2; // 1+SideImax
-#endif
 
 
 
@@ -26,8 +19,8 @@ class medialBall;
 class voxel
 {
 public:
-	voxel(short ii, short jj, short kk, float rR) : ball(NULL), i(ii), j(jj), k(kk), R(rR) {};
-	voxel() : ball(NULL),i(-1), j(-1), k(-1),R(0) {};
+	voxel(short ii, short jj, short kk, float rR) : ball(nullptr), i(ii), j(jj), k(kk), R(rR) {};
+	voxel() : ball(nullptr),i(-1), j(-1), k(-1),R(0) {};
 public:
 	medialBall* ball;
 	short i, j, k;
@@ -61,13 +54,13 @@ public:
 class segments
 {
 public:
- segments(): s(NULL),cnt(0){};
- void reSize(int size){ if (s == NULL) {s = new segment[size];} else {std::cout<<" \nError in segments "<<size_t(s)<<std::endl; s = new segment[size];} }
+ segments(): s(nullptr),cnt(0){};
+ void reSize(int size){ if (s == nullptr) {s = new segment[size];} else {std::cout<<" \nError in segments "<<size_t(s)<<std::endl; s = new segment[size];} }
 
- ~segments(){ if (s != NULL && cnt) {delete[] s;s = NULL;} }
+ ~segments(){ if (s != nullptr && cnt) {delete[] s;s = nullptr;} }
 
  voxel* vxl(int i) const
- {  for (int p=0; p<cnt; ++p) { if ( (i>=s[p].start) && (i<s[p+1].start) )	return s[p].v(i); } 	return NULL; }
+ {  for (int p=0; p<cnt; ++p) { if ( (i>=s[p].start) && (i<s[p+1].start) )	return s[p].v(i); } 	return nullptr; }
 
  segment* s;
  int cnt;
@@ -77,28 +70,27 @@ public:
 
 
 
-#define _pp5 0.0
 #define _mp5 -0.5
 
-/// maximal-sphere class, describing spheres, which are generated for voxels on the medial surface 
+/// maximal-sphere class, describing spheres, which are generated for voxels on the medial surface
 class medialBall
 {
   public:
 
-	medialBall(short t) : vxl(NULL), fi(-10000), fj(-0.5), fk(-10000),type(t), R(-10000), nKids(0), nNeis(0), corId(0), boss(this), kids(NULL), neis(NULL){};
-	medialBall(voxel* v, short t) : vxl(v), fi(v->i-_mp5), fj(v->j-_mp5), fk(v->k-_mp5), type(t), R(v->R), nKids(0), nNeis(0), corId(0), boss(this), kids(NULL), neis(NULL){};
+	medialBall(short t) : vxl(nullptr), fi(-10000), fj(-0.5), fk(-10000),type(t), R(-10000), nKids(0), nNeis(0), corId(0), boss(this), kids(nullptr), neis(nullptr){};
+	medialBall(voxel* v, short t) : vxl(v), fi(v->i-_mp5), fj(v->j-_mp5), fk(v->k-_mp5), type(t), R(v->R), nKids(0), nNeis(0), corId(0), boss(this), kids(nullptr), neis(nullptr){};
 	~medialBall(){ if(kids) delete[] kids; if(neis) delete[] neis;};
 
 
 	short level() const
 	{	if (this == boss)	    {return 1;}//counter=0;
-		else  if (boss != NULL)	return boss->level()+1;
+		else  if (boss != nullptr)	return boss->level()+1;
 		else {std::cout<<"F";std::cout.flush(); return -10000;}
 	}
 	bool inParents(medialBall* vj) const
 	{	if (vj == boss)			{return true;}//counter=0;
 		else  if (boss == this)	return false;
-		else  if (boss != NULL)	return boss->inParents(vj);
+		else  if (boss != nullptr)	return boss->inParents(vj);
 		else {std::cout<<"F";std::cout.flush(); return false;}
 	}
 
@@ -108,23 +100,23 @@ class medialBall
 	};
 
 	//inline const medialBall* smallestP() const
-	//{	register const medialBall* pMin = this;
-		//register const medialBall* v = this;
+	//{	const medialBall* pMin = this;
+		//const medialBall* v = this;
 		//while (v != v->boss)
 		//{	pMin = v->R < pMin->R ? v : pMin;   v=v->boss;  }
 		//return pMin;
 	//};
 
-	bool isNei(const medialBall* neib) const
-	{	for (int ii=0;ii<nNeis;++ii)  if (neis[ii]==neib)	return true;
+	bool isNei(const medialBall* bal) const
+	{	for (int ii=0;ii<nNeis;++ii)  if (neis[ii]==bal)	return true;
 		return false;
 	};
-	//bool neisNotNeiWith(const medialBall* neib) const
-	//{	for (int ii=0;ii<nNeis;++ii)  if (neis[ii]->isNei(neib))  return false;
+	//bool neisNotNeiWith(const medialBall* bal) const
+	//{	for (int ii=0;ii<nNeis;++ii)  if (neis[ii]->isNei(bal))  return false;
 		//return true;
 	//};
-	//medialBall*& neiRef(const medialBall* neib)
-	//{	for (int ii=0;ii<nNeis;++ii)  if (neis[ii]==neib)  return neis[ii];
+	//medialBall*& neiRef(const medialBall* bal)
+	//{	for (int ii=0;ii<nNeis;++ii)  if (neis[ii]==bal)  return neis[ii];
 		//std::cout<<"no nei found! "<<int(nNeis)<<std::endl;
 		//return neis[1000];
 	//};
@@ -136,7 +128,7 @@ class medialBall
             for (int kk=0;kk<nKids;++kk)    if(kids[kk]!=kid)   kids[++ii]=kids[kk];
             nKids=ii+1;
         }
-        else if (nKids==1 && kids[0]==kid) {delete[] kids; kids=NULL; nKids=0;}
+        else if (nKids==1 && kids[0]==kid) {delete[] kids; kids=nullptr; nKids=0;}
         kid->boss = boss;
 	};
 	//bool isKid(const medialBall* kid) const
@@ -176,6 +168,7 @@ public:
 	float _0() const  { return fi; }
 	float _1() const  { return fj; }
 	float _2() const  { return fk; }
+	dbl3 node() const { return dbl3(fi,fj,fk); }
 
 	 voxel* vxl;
 	 float fi,fj,fk;
@@ -195,7 +188,7 @@ public:
 
 inline bool operator != ( const medialBall & a, const voxel& b)
 {
-	return (short(a.fi+_pp5) != b.i || short(a.fj+_pp5) != b.j ||  short(a.fk+_pp5) != b.k);
+	return (short(a.fi) != b.i || short(a.fj) != b.j ||  short(a.fk) != b.k);
 }
 
 inline dbl3 operator-(const medialBall& a, const medialBall& b)
@@ -240,6 +233,7 @@ public:
  {}
  virtual ~poreNE() {}
  bool ispore() {return true;}
+ dbl3 node() const { return mb->node(); }
  int contact(int pid)
  { 	  std::map<int,int>::iterator it = contacts.find(pid);
 	  if (it!=contacts.end())			 return it->second;
@@ -265,8 +259,8 @@ class throatNE : public ElementO
 private:
  throatNE(){};
 public:
- throatNE(int trotid, int elm1, int elm2): tid(trotid), e1(elm1),e2(elm2),nCrnrs(0),CrosArea(0.0,0.0,0.0)
- {}//mb2(NULL),mb1(NULL),
+ throatNE(int trotid, int elm1, int elm2): tid(trotid), e1(elm1),e2(elm2),nCrnrs(0),CrosArea(0.,0.,0.)
+ {}//mb2(nullptr),mb1(nullptr),
  virtual ~throatNE() {}
  bool ispore() {return false;}
  int nToxel2Balls() const
@@ -274,6 +268,10 @@ public:
 
  double radius() const { return toxels1.empty() ? mb22()->R : 0.5*(mb22()->R+mb11()->R); }
  int neip(int i) const {return (&e1)[i];}
+
+ dbl3 node() const { return mb22()->node(); }
+
+
 public:
  int tid;
  int e1;
@@ -285,7 +283,7 @@ public:
  std::vector<voxel*>  toxels2;
  std::vector<voxel*>  toxels1;
  const medialBall* mb22() const {return toxels2.front()->ball;}
- const medialBall* mb11() const  { return toxels1.empty() ? NULL :  toxels1.front()->ball; }
+ const medialBall* mb11() const  { return toxels1.empty() ? nullptr :  toxels1.front()->ball; }
  medialBall* mb2Ch() {return toxels2.front()->ball;}
  medialBall* mb1Ch() {return toxels1.front()->ball;}
 

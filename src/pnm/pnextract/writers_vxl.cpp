@@ -12,19 +12,17 @@
 
 
 
-voxelField<float> ballRadiiToVoxel(const blockNetwork& mpn)
-{
+voxelField<float> ballRadiiToVoxel(const blockNetwork& mpn)  {
 	voxelField<float> vfild(mpn.cg.nx,mpn.cg.ny,mpn.cg.nz,0);
 	{
 		const medialSurface & rf = *mpn.srf;
 
 		{
-			float maxr=0.0;
-			float minr=0.0;
+			float maxr=0.;
+			float minr=0.;
 			std::vector<voxel>::const_iterator ti = rf.vxlSpace.begin()-1;
 			std::vector<voxel>::const_iterator tend = rf.vxlSpace.end();
-			while (++ti<tend)
-			{
+			while (++ti<tend)  {
 				{
 					vfild(ti->i,ti->j,ti->k) = ti->R;
 						 maxr=max(maxr,ti->R);
@@ -40,15 +38,13 @@ voxelField<float> ballRadiiToVoxel(const blockNetwork& mpn)
 
 
 
-voxelImageT<int> VElemsPlusThroats(const blockNetwork& mpn)
-{
+voxelImageT<int> VElemsPlusThroats(const blockNetwork& mpn)  {
 	voxelImageT<int> vfild(mpn.VElems);
  	cout<< " VElemsPlusThroats   "<<endl   ;
 	int throatValue=mpn.poreIs.size()+1000000;
 	std::vector<throatNE*>::const_iterator ti = mpn.throatIs.begin();
 	std::vector<throatNE*>::const_iterator tend = mpn.throatIs.end();
-	while (ti<tend)
-	{
+	while (ti<tend)  {
 		std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
 		for ( ; vitr<(*ti)->toxels2.end();++vitr)
 			vfild((*vitr)->i+1,(*vitr)->j+1,(*vitr)->k+1) = throatValue;
@@ -65,15 +61,13 @@ voxelImageT<int> VElemsPlusThroats(const blockNetwork& mpn)
 
 ///.  Written by Tom Bultreys {
 
-voxelField<int> VThroats(const blockNetwork& mpn)
-{
+voxelField<int> VThroats(const blockNetwork& mpn)  {
     voxelField<int> vfild (mpn.VElems.size3() , 0);
     cout<< " VThroats   "<<endl   ;
     //int throatValue=mpn.poreIs.size()+1000000;
     std::vector<throatNE*>::const_iterator ti = mpn.throatIs.begin();
     std::vector<throatNE*>::const_iterator tend = mpn.throatIs.end();
-    while (ti<tend)
-    {
+    while (ti<tend)  {
         int throatValue = (*ti)->tid + 1;
         std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
         for ( ; vitr<(*ti)->toxels2.end();++vitr)
@@ -86,8 +80,7 @@ voxelField<int> VThroats(const blockNetwork& mpn)
 }
 
 
-voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
-{
+voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)  {
     int x,y,zdummy;
     mpn.VElems.getSize(x,y,zdummy);
     voxelField<int> vfild (int3(x,y,endSlice - beginSlice) , 0);
@@ -95,8 +88,7 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
     //int throatValue=mpn.poreIs.size()+1000000;
     std::vector<throatNE*>::const_iterator ti = mpn.throatIs.begin();
     std::vector<throatNE*>::const_iterator tend = mpn.throatIs.end();
-    while (ti<tend)
-    {
+    while (ti<tend)  {
         int throatValue = (*ti)->tid + 1;
         std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
         for ( ; vitr<(*ti)->toxels2.end();++vitr)
@@ -108,16 +100,14 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
 
     return vfild;
 }
- voxelField<int> poreMaxBalls(const blockNetwork& mpn)
- {
+ voxelField<int> poreMaxBalls(const blockNetwork& mpn)  {
     voxelField<int> vfild(mpn.cg.nx, mpn.cg.ny, mpn.cg.nz,0);
     {
         const medialSurface & rf = *mpn.srf;
 
         std::vector<medialBall>::const_iterator vi = rf.ballSpace.begin();
         std::vector<medialBall>::const_iterator voxend = rf.ballSpace.end();
-        while (vi<voxend)
-        {
+        while (vi<voxend)  {
            int x,y,z;
            x = vi->fi;
            y = vi->fj;
@@ -129,12 +119,9 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
                /// absorb 2R range balls
                int ex, ey, ez;
                ex = 1*sqrt(rlim);
-               for (int a = -ex; a <=  ex; ++a)
-               { ey = sqrt(1*rlim-a*a);
-                 for (int b = -ey; b <=  ey; ++b)
-                 { ez = sqrt(1*rlim-a*a-b*b);
-                   for (int c = -ez; c <=  ez; ++c)
-                   {
+               for (int a = -ex; a <=  ex; ++a)  { ey = sqrt(1*rlim-a*a);
+                 for (int b = -ey; b <=  ey; ++b)  { ez = sqrt(1*rlim-a*a-b*b);
+                   for (int c = -ez; c <=  ez; ++c)  {
                        if (rf.isInside(x+a, y+b, z+c) && vfild(x+a,y+b,z+c) == 0 && vi->level()==1)
                       // vfild(x+a,y+b,z+c) = vi->level();
                            vfild(x+a,y+b,z+c) = mpn.VElems(x,y,z);
@@ -151,16 +138,14 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
 }
 
 
- voxelField<int> poreMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice)
- {
+ voxelField<int> poreMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice)  {
     voxelField<int> vfild(mpn.cg.nx, mpn.cg.ny, lastSlice - firstSlice, 0);
     {
         const medialSurface & rf = *mpn.srf;
 
         std::vector<medialBall>::const_iterator vi = rf.ballSpace.begin();
         std::vector<medialBall>::const_iterator voxend = rf.ballSpace.end();
-        while (vi<voxend)
-        {
+        while (vi<voxend)  {
            int x,y,z;
            x = vi->fi;
            y = vi->fj;
@@ -174,12 +159,9 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
                ex = 1*sqrt(rlim);
               // if( (x + (1 + ex) < firstSlice) || (x - ( 1 + ex) > lastSlice) )
               //     continue;
-               for (int a = -ex; a <=  ex; ++a)
-               { ey = sqrt(1*rlim-a*a);
-                 for (int b = -ey; b <=  ey; ++b)
-                 { ez = sqrt(1*rlim-a*a-b*b);
-                   for (int c = -ez; c <=  ez; ++c)
-                   {
+               for (int a = -ex; a <=  ex; ++a)  { ey = sqrt(1*rlim-a*a);
+                 for (int b = -ey; b <=  ey; ++b)  { ez = sqrt(1*rlim-a*a-b*b);
+                   for (int c = -ez; c <=  ez; ++c)  {
                        if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice && z+c < lastSlice) && vfild(x+a,y+b,(z-firstSlice)+c) == 0 && vi->level()==1)
                       // vfild(x+a,y+b,z+c) = vi->level();
                            vfild(x+a,y+b,z-firstSlice+c) = mpn.VElems(x,y,z);
@@ -195,16 +177,14 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
     return vfild;
 }
 
- voxelField<int> throatMaxBalls(const blockNetwork& mpn)
- {
+ voxelField<int> throatMaxBalls(const blockNetwork& mpn)  {
     voxelField<int> vfild(mpn.cg.nx,mpn.cg.ny,mpn.cg.nz,0);
     {
         const medialSurface & rf = *mpn.srf;
 
         std::vector<throatNE *>::const_iterator thr = mpn.throatIs.begin();
         std::vector<throatNE *>::const_iterator thrEnd = mpn.throatIs.end();
-        while (thr<thrEnd)
-        {
+        while (thr<thrEnd)  {
            int x,y,z;
           const medialBall* vi1 = (*thr)->mb11();
           const medialBall* vi2 = (*thr)->mb22();
@@ -233,12 +213,9 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
                /// absorb 2R range balls
                int ex, ey, ez;
                ex = 1*sqrt(rlim);
-               for (int a = -ex; a <=  ex; ++a)
-               { ey = sqrt(1*rlim-a*a);
-                 for (int b = -ey; b <=  ey; ++b)
-                 { ez = sqrt(1*rlim-a*a-b*b);
-                   for (int c = -ez; c <=  ez; ++c)
-                   {
+               for (int a = -ex; a <=  ex; ++a)  { ey = sqrt(1*rlim-a*a);
+                 for (int b = -ey; b <=  ey; ++b)  { ez = sqrt(1*rlim-a*a-b*b);
+                   for (int c = -ez; c <=  ez; ++c)  {
                        if (rf.isInside(x+a, y+b, z+c) && vfild(x+a,y+b,z+c) == 0){
                            int val = (*thr)->tid + 1;
                            vfild(x+a,y+b,z+c) = val;
@@ -256,16 +233,14 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
 }
 
 
- voxelField<int> throatMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice)
- {
+ voxelField<int> throatMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice)  {
     voxelField<int> vfild(mpn.cg.nx,mpn.cg.ny,lastSlice - firstSlice,0);
     {
         const medialSurface & rf = *mpn.srf;
 
         std::vector<throatNE *>::const_iterator thr = mpn.throatIs.begin();
         std::vector<throatNE *>::const_iterator thrEnd = mpn.throatIs.end();
-        while (thr<thrEnd)
-        {
+        while (thr<thrEnd)  {
            int x,y,z;
           const medialBall* vi1 = (*thr)->mb11();
           const medialBall* vi2 = (*thr)->mb22();
@@ -294,12 +269,9 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
                /// absorb 2R range balls
                int ex, ey, ez;
                ex = 1*sqrt(rlim);
-               for (int a = -ex; a <=  ex; ++a)
-               { ey = sqrt(1*rlim-a*a);
-                 for (int b = -ey; b <=  ey; ++b)
-                 { ez = sqrt(1*rlim-a*a-b*b);
-                   for (int c = -ez; c <=  ez; ++c)
-                   {
+               for (int a = -ex; a <=  ex; ++a)  { ey = sqrt(1*rlim-a*a);
+                 for (int b = -ey; b <=  ey; ++b)  { ez = sqrt(1*rlim-a*a-b*b);
+                   for (int c = -ez; c <=  ez; ++c)  {
                        if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice && z+c < lastSlice) && vfild(x+a,y+b,z-firstSlice+c) == 0){
                            int val = (*thr)->tid + 1;
                            vfild(x+a,y+b,z-firstSlice+c) = val;

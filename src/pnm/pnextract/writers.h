@@ -2,7 +2,7 @@
 #define VTUWRITER_H
 
 /*---------------------------------------------------------------------------*\
-Developed by:
+written by:
 	Ali Q Raeini  email: a.q.raeini@imperial.ac.uk  and
 	Tom Bultreys
 \*---------------------------------------------------------------------------*/
@@ -35,7 +35,7 @@ voxelField<int> VElemsPlusThroats(const blockNetwork& mpn);
 
 
 void vtuWriteMbMbs(std::string suffix, const std::vector<medialBall*>& ballSpace,  const  std::vector<poreNE*> poreIs, const voxelField<int>&  VElems, double dx, dbl3 X0);
-void vtuWriteThroatMbMbs(std::string baseName,   const std::vector<throatNE*>& throatIs,   const  std::vector<poreNE*> poreIs,  const voxelField<int>&  VElems, double dx, dbl3 X0);
+void vtuWriteThroatMbMbs(std::string baseNam,   const std::vector<throatNE*>& throatIs,   const  std::vector<poreNE*> poreIs,  const voxelField<int>&  VElems, double dx, dbl3 X0);
 
 void vtuWriteMedialSurface(std::string suffix, const std::vector<medialBall*>& ballSpace,  const  std::vector<poreNE*> poreIs, const voxelField<int>&  VElems, double dx, dbl3 X0);
 

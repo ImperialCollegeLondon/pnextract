@@ -1,6 +1,6 @@
 
 
-# Ctility C++ classes and types and functions, not available in std library,
+# Utility C++ classes and types and functions, not available in std library,
 
 
 -----------------
@@ -29,7 +29,7 @@ The file defines two classes
  
  -  piece<T> is a simpler alternative to std::slice.  It serves the same job that std::string_view serves in relation with std::string, but for std::vector. Essentially it an efficient wrapper around continuous data, and is used to do arithmetic operations on data stored as std::vector.
 
- - lazyvec<T>, used with alias names dbls, floats, dbl3s, is similar to piece<T>, but keeps its own copy of the data rather than being a wrapper around other data.  we use this primarily as an alternative to std::valarray which has an ugly syntax.
+ - Vars<T>, used with alias names dbls, floats, dbl3s, is similar to piece<T>, but keeps its own copy of the data rather than being a wrapper around other data.  we use this primarily as an alternative to std::valarray which has an ugly syntax.
 
  - varsOr<T> This is only used in svplot library. It  but is meant to serve as a container for optional data (with a default value) and contains a name for the data as well as a transform function.  This is not an essential feature and needs further development and testing.
 
@@ -37,14 +37,12 @@ Some basic functions for statistical analysis of scalar data are also stored her
 
 -------
 
-## Global data [globals.h] and [globals.cpp] include source code for 
-debugging, and testing and calibration of C++ codes. It also serves as 
-a place where temporary auxiliary data are feed into our codes for 
-model calibration.
+[globals.h] Macros and utility functions for debugging, testing and 
+calibration of C++ codes.
 
 -------
 
-[timing.h] implements the following classes:
+[timing.h] Implements the following classes:
 
  - Timer : records execution of different parts of the code using tic() 
  and toc() members. `_tic_` and `_tac_` convenience macros assume a 
@@ -65,7 +63,7 @@ server as a platform for coupling related but standalone C++ codes. They define 
 
  - SiR: Class for running C++ modules (SiM)
  - SiM: namespace which contain functions all with the general syntax:
-   `bool function( stringstream& ins, store_t& stor);`
+   `bool function( stringstream& ins, storeT& stor);`
    
 Store_t is an std::unordered_map serving as in memory key-value database.
 [SiR.h] implements how the modules are run, and [SiM.cpp] implements 

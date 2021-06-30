@@ -14,7 +14,7 @@ else                       [ "$msRoot" == "$apsDir" ] || exit ; fi
 
 checkErr()
 {
-  Er="$(grep -E Error\|terminate\|exception\|': error' $1 || true)" # grep returns 1 (==false) if no match found
+  Er="$(grep -E Error\|terminate\|Aborting\|': error' $1 || true)" # grep returns 1 (==false) if no match found
   task=" $(echo $1 | sed 's/log\./  /') *** \n\n"
   
   if [ $2 != 0 ]; then    Er+="  Exit code: $2"; fi
@@ -48,8 +48,7 @@ logf=log.$(basename $(echo $tstApp | sed 's/ \+/_/g'))
 [ -n "$tstInp" ] && logf+=_$(basename $tstInp)
 
 echo  "$tstApp $tstInp >  $tstDir/$logf "
-(cd $tstDir/ && $tstApp   $tstInp > $logf 2>&1 )
-cod=$?
-checkErr "$tstDir/$logf" $cod
+(cd $tstDir/ && $tstApp   $tstInp > $logf 2>&1 );  ret=$?
+checkErr "$tstDir/$logf" $ret
 
-exit $cod
+exit $ret

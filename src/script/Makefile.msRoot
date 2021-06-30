@@ -15,6 +15,7 @@ all: checkRoot
 	mkdir -p lib
 	mkdir -p bin
 	mkdir -p include
+	(cd ${ms3rd} && make -f ${msSrc}/script/makefile.3rd -j${nproc} zlib)
 	(cd ${ms3rd} && make -f ${msSrc}/script/makefile.3rd -j${nproc})
 	(cd ${msSrc} && script/AllMake)
 
@@ -34,11 +35,8 @@ clean: checkRoot
 	rm -rf  ${msRoot}/build ${msSrc}/*/__pycache__  log.make
 
 distclean: checkRoot clean
-	@echo "\n**********************************************************\nWarning:\n"
-	@echo " deleting log.make, bin/, include/, lib/, share/ and test/"
-	@echo " Entre Ctrl+c to stop, or Entre to proceed?"
-	@echo "\n**********************************************************\n"
-	read   Ctrl_c_or_Entre
+	@echo "\n\nWarning:\n\n   deleting log.make, bin/, include/, lib/, share/ and test/, in 10s\n"
+	@bash -c 'read -t 10 -p "   press Entre to proceed,  Ctrl+c to stop? "' || echo deleting 
 	sleep 2
 	rm -rf   ${msRoot}/bin  ${msRoot}/include  ${msRoot}/lib  ${msRoot}/share ${msRoot}/test
 	(cd ${ms3rd} && make -f ${msSrc}/script/makefile.3rd  distclean)
@@ -58,7 +56,6 @@ maketest= ( ! [ -d ${1} ] ) || (echo test ${1} && cd ${1} && make test)  ||  ech
 test: checkRoot
 	mkdir -p test
 	@$(call maketest,src/pnm/pnextract)
-	@$(call maketest,src/pnm/pnflow)
 	@$(call maketest,src/libvoxel)
 
 # not used yet

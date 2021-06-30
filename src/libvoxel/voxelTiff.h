@@ -51,13 +51,12 @@ int tifDataType(T)
 
 inline void getTifTags(dbl3& X0_, dbl3& dx_, TIFF *tif)
 {
-	float dx,dy,dz;
+	float dx,dy;
 	TIFFGetField(tif, TIFFTAG_XRESOLUTION, &dx);
 	TIFFGetField(tif, TIFFTAG_YRESOLUTION, &dy);
-	dz=dy;
-	dx_={dx,dy,dz};
+	dx_={dx,dy,dy};
 
-	float X0=0.0, Y0=0.0, Z0=-2.1e30; 
+	float X0=0., Y0=0., Z0=-2.1e30; 
 	TIFFGetField(tif, TIFFTAG_XPOSITION, &X0);
 	TIFFGetField(tif, TIFFTAG_YPOSITION, &Y0);
 
@@ -65,23 +64,20 @@ inline void getTifTags(dbl3& X0_, dbl3& dx_, TIFF *tif)
 	TIFFGetField(tif, TIFFTAG_IMAGEDEPTH, &kFrst);
 	Z0=double(kFrst)*dx;
 
-	X0_[0]=X0;	X0_[1]=Y0;	X0_[2]=Z0;
+	X0_={X0,Y0,Z0};
 
 
 	char * info;
-	if(TIFFGetField(tif, TIFFTAG_IMAGEDESCRIPTION, &info))
-	{
-		std::istringstream instrim;
-		//std::cout<<"\" "<<info<<" \""<<std::endl;
-		instrim.str(info);
-		while(instrim.good())
-		{	std::string str;
+	if(TIFFGetField(tif, TIFFTAG_IMAGEDESCRIPTION, &info))  {
+		std::istringstream instrim(info);
+		while(instrim.good())  {
+			std::string str;
 			instrim>>str;
 			if(str=="dx")	instrim >> dx_;
 			else if(str=="X0")	instrim >> X0_;
 		}
 	}
-	if(dx_[0]<1.0e-16) (std::cout<<"\n !!! Error: dx read from tif seems invalid  !!! \n     ").flush();
+	if(dx_.x<1e-16) (std::cout<<"\n !!! Error: dx read from tif seems invalid  !!! \n     ").flush();
 
 }
 
@@ -94,10 +90,8 @@ inline void setTifTags(const dbl3& X0_, const dbl3& dx_, TIFF *tif)
 
 	
 	std::ostringstream ostrim;
-	ostrim<<" dx "<<dx_;
-	if(mag(X0_)>1.0e-16) ostrim<<"  X0 "<<X0_<<" ";
-	//ostrim<<" ";
-	//const char* info = ostrim.str().c_str();//+" \0" \0 leads to Warning when reading 
+	ostrim<<" dx "<<dx_<<" ";
+	if(mag(X0_)>1e-16) ostrim<<" X0 "<<X0_<<" ";
 	(std::cout<<" tag: \""<<ostrim.str()<<"\" ").flush();
 	TIFFSetField(tif, TIFFTAG_IMAGEDESCRIPTION, ostrim.str().c_str());
 
@@ -105,13 +99,12 @@ inline void setTifTags(const dbl3& X0_, const dbl3& dx_, TIFF *tif)
 }
 
 
-template<typename T>   int readTif(voxelField<T>&  aa, std::string innam )
+template<typename T>   int readTif( voxelField<T>&  aa, std::string fnam )
 {
+	(std::cout<<  " reading tif file "<<fnam<<" ").flush();
+
 	uint32 nx, ny;
-	//uint16 samplesperpixel;
-	//uint16 bitspersample=1;
-	//uint16 config;
-	//uint16 photometric;
+	//uint16 samplesperpixel, bitspersample=1, config, photometric;
 	//uint16* red, green, blue;
 	//tsize_t rowsize;
 	//uint32 row;
@@ -119,20 +112,21 @@ template<typename T>   int readTif(voxelField<T>&  aa, std::string innam )
         
 
 	TIFF *tif = (TIFF *) NULL;
-	tif = TIFFOpen(innam.c_str(), "r");	 if (tif == NULL)	return (-1);
+	tif = TIFFOpen(fnam.c_str(), "r");	 if (tif == NULL)	return (-1);
 
-	voxelImageT<T>* vxls = dynamic_cast<voxelImageT<T>*>(&aa);
-	if(vxls) 		getTifTags(vxls->X0Ch(),vxls->dxCh(),tif);
 
 	TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &nx);
 	TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &ny);
 	//TIFFGetField(tif, TIFFTAG_PLANARCONFIG, &config);
 	int npages=TIFFNumberOfDirectories(tif);
+	npages=std::min(npages,maxNz);
 
-	aa.reset(nx,ny,npages,T(0.0));
+	(std::cout<<"size: "<<aa.size3()<<" * "<<sizeof(T)).flush();
+	{ voxelImageT<T>* vxls = dynamic_cast<voxelImageT<T>*>(&aa);
+	  if(vxls) {  getTifTags(vxls->X0Ch(),vxls->dxCh(),tif);
+		  (std::cout<<",  X0:"<<vxls->X0()<<",  dx:"<<vxls->dx()).flush(); } }
 
-	std::cout<<"size:"<<aa.size3()<<" * "<<sizeof(T)
-	<<"  X0:"<<vxls->X0()<<"  dx:"<<vxls->dx()<<std::endl;;
+	aa.reset(nx,ny,npages,T(0.));
 
 
 	for(int pn=0;pn<npages;++pn) {
@@ -143,28 +137,24 @@ template<typename T>   int readTif(voxelField<T>&  aa, std::string innam )
 	}
   	TIFFClose(tif);
 
-
+	std::cout<<  " ."<<std::endl;
 	return (0);
 }
 
-template<typename T>   int writeTif(const voxelField<T>&  aa, std::string outnam )
-{
+template<typename T>   int writeTif(const voxelField<T>&  aa, std::string fnam)  {
 
 	//uint32 rowsperstrip = uint32(-1);
 	uint32 nx=aa.nx(), ny=aa.ny();
 	int pn=0, npages=aa.nz();
 	int smplfrmt	 = tifDataType(T());
-	//uint16 samplesperpixel;
-	//uint16 bitspersample;
-	//uint16 config;
-	//uint16 photometric;
+	//uint16 samplesperpixel, bitspersample, config, photometric;
 	//uint16* red, green, blue;
 	//tsize_t rowsize;
 	//uint32 row;
 	//tsample_t s;
 
 	TIFF * tif = (TIFF *) NULL;
-	tif = TIFFOpen(outnam.c_str(), "w8");		if (tif == NULL)	return (-2);
+	tif = TIFFOpen(fnam.c_str(), "w8");		if (tif == NULL)	return -2;
 
 	const voxelImageT<T>* vxls = dynamic_cast<const voxelImageT<T>*>(&aa);
 	if(vxls) setTifTags(vxls->X0(),vxls->dx(),tif);
@@ -211,8 +201,8 @@ template<typename T>   int writeTif(const voxelField<T>&  aa, std::string outnam
 }
 
 
-template<typename T>   int writeTif(const voxelField<T>&  aa, std::string outnam, int iStart,int iEnd , int jStart,int jEnd , int kStart,int kEnd )
-{
+template<typename T>   
+int writeTif(const voxelField<T>&  aa, std::string fnam, int iStart,int iEnd , int jStart,int jEnd , int kStart,int kEnd ) {
 
 	voxelImageT<T>  bb;
 	bb.reset({iEnd-iStart, jEnd-jStart, kEnd-kStart});
@@ -220,7 +210,7 @@ template<typename T>   int writeTif(const voxelField<T>&  aa, std::string outnam
 	if(vxls) 	bb.setFrom(*vxls, iStart, jStart, kStart);
 	else     	bb.voxelField<T>::setFrom(aa, iStart, jStart, kStart);
 
-	return writeTif(bb, outnam);
+	return writeTif(bb, fnam);
 
 //! approach below complains about LZW compression.
 //! Note although the deflate compression algorithm overal is a better choice, 
@@ -244,13 +234,11 @@ template<typename T>   int writeTif(const voxelField<T>&  aa, std::string outnam
   tif = (TIFF *) NULL;
 
 
-	tif = TIFFOpen(outnam.c_str(), "w8");		if (tif == NULL)	return (-2);
+	tif = TIFFOpen(fnam.c_str(), "w8");		if (tif == NULL)	return -2;
 
-	//const voxelImageT<T>* vxls = dynamic_cast<const voxelImageT<T>*>(&aa);
 	if(vxls) setTifTags(vxls->X0(),vxls->dx(),tif);
 
 
-	//std::cout<<aa.size3()<<std::endl;
    for(pn=0;pn<npages;++pn) {
 		TIFFSetField(tif, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
 
@@ -291,46 +279,30 @@ template<typename T>   int writeTif(const voxelField<T>&  aa, std::string outnam
 
 
 
-inline std::unique_ptr<voxelImageTBase> readTif
-(
-	std::string innam
-)
-{
+inline std::unique_ptr<voxelImageTBase>  readTif(std::string fnam)  {
 	TIFF *tif = (TIFF *) NULL;
-	tif = TIFFOpen(innam.c_str(), "r");	 if (tif == NULL)	return std::unique_ptr<voxelImageTBase>();
- //TIFFTAG_SAMPLEFORMAT, smplfrmt);TIFFTAG_BITSPERSAMPLE
-	uint16 frmt=SAMPLEFORMAT_UINT;
-	uint16 nbits=8;
+	tif = TIFFOpen(fnam.c_str(), "r");	 if (tif == NULL)	return std::unique_ptr<voxelImageTBase>();
+	uint16 frmt = SAMPLEFORMAT_UINT,   nbits = 8;
 	TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT, &frmt);
 	TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &nbits);
-
+	TIFFClose(tif);
 
 	std::cout<<"frmt: "<<frmt<<" : "<<nbits<<std::endl;
 	switch (frmt) {
-
 		case SAMPLEFORMAT_UINT:
 		default:
-		  if   (nbits==32)
-		  	{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned int>(innam)); }
-		  else if(nbits==16)
-		  	{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned short>(innam)); }
-		  else
-			{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned char>(innam)); }
+		  if     (nbits==32) return std::make_unique<voxelImageT<unsigned int>>(fnam);
+		  else if(nbits==16) return std::make_unique<voxelImageT<unsigned short>>(fnam);
+		  else               return std::make_unique<voxelImageT<unsigned char>>(fnam);
 		  break;
-
 		case SAMPLEFORMAT_INT:
-		  if   (nbits==32)
-			{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<int>(innam)); }
-		  else if(nbits==16)
-			{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<short>(innam)); }
-		  else
-			{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<char>(innam)); }
+		  if   (nbits==32)    return std::make_unique<voxelImageT<int>>(fnam); 
+		  else if(nbits==16)  return std::make_unique<voxelImageT<short>>(fnam);
+		  else                return std::make_unique<voxelImageT<char>>(fnam);
 		  break;
 		case SAMPLEFORMAT_IEEEFP:
-		  if   (nbits==32)
-			{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<float>(innam)); }
-		  else
-			{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<double>(innam)); }
+		  if   (nbits==32)    return std::make_unique<voxelImageT<float>>(fnam);
+		  else                return std::make_unique<voxelImageT<double>>(fnam);
 			break;
 		}
 
@@ -342,28 +314,20 @@ inline std::unique_ptr<voxelImageTBase> readTif
 		//case TIFF_BYTE:
 		//case TIFF_ASCII:
 		//case TIFF_UNDEFINED:
-		//default:
-			//{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned char>(innam)); }
-		//case TIFF_SBYTE:
-			//{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<char>(innam)); }
+		//default:            return std::make_unique<voxelImageT<unsigned char>(fnam));
+		//case TIFF_SBYTE:    return std::make_unique<voxelImageT<char>(fnam));
 			//break;
-		//case TIFF_SHORT:
-			//{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned short>(innam)); }
-		//case TIFF_SSHORT:
-			//{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<short>(innam)); }
+		//case TIFF_SHORT:    return std::make_unique<voxelImageT<unsigned short>(fnam));
+		//case TIFF_SSHORT:   return std::make_unique<voxelImageT<short>(fnam));
 			//break;
-		//case TIFF_LONG:
-			//{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned int>(innam)); }
-		//case TIFF_SLONG:
-			//{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<int>(innam)); }
+		//case TIFF_LONG:     return std::make_unique<voxelImageT<unsigned int>(fnam));
+		//case TIFF_SLONG:    return std::make_unique<voxelImageT<int>(fnam));
 		//case TIFF_IFD:
 		//case TIFF_RATIONAL:
 		//case TIFF_SRATIONAL:
-		//case TIFF_FLOAT:
-			//{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<float>(innam)); }
+		//case TIFF_FLOAT:    return std::make_unique<voxelImageT<float>(fnam));
 			//break;
-		//case TIFF_DOUBLE:
-			//{ TIFFClose(tif);	return std::unique_ptr<voxelImageTBase>(new voxelImageT<double>(innam)); }
+		//case TIFF_DOUBLE:   return std::make_unique<voxelImageT<double>(fnam));
 			//break;
 		//}
 }

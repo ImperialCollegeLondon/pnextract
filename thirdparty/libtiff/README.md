@@ -1,5 +1,5 @@
 
-## Minified libtiff for use in: https://github.com/aliraeini/libvoxel.
+## Minified libtiff for use in libvoxel and voxlib.
 ## For the original libtiff, see: https://gitlab.com/libtiff/libtiff
 
 

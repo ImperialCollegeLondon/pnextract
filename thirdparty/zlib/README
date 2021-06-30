@@ -1,4 +1,4 @@
-ZLIB DATA COMPRESSION LIBRARY
+ZLIB DATA COMPRESSION LIBRARY - stripped down! see http://zlib.net/ instead.
 
 zlib 1.2.11 is a general purpose data compression library.  All the code is
 thread safe.  The data format used by the zlib library is described by RFCs

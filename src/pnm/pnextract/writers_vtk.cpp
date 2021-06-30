@@ -2,7 +2,7 @@
 /*---------------------------------------------------------------------------*\
 written by: Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
 Imperial College, Total project on network extraction
-http://www3.imperial.ac.uk/earthscienceandengineering/research/perm/porescalemodelling
+https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/
 \*---------------------------------------------------------------------------*/
 
 
@@ -31,22 +31,20 @@ using namespace std;
 #include "writers.h"
 
 #define _pi  3.14159265359
-#define RadVTKFaCT  1.0
+#define RadVTKFaCT  1.
 
 
 
 
 
-dbl3 rotate( dbl3 n, dbl3 x, dbl3 y, double gamma)
-{
+dbl3 rotate( dbl3 n, dbl3 x, dbl3 y, double gamma)  {
 	return dbl3
 	  (	( x[0]*(n[1]*n[1]+n[2]*n[2]) - n[0]*( x[1]*n[1]+x[2]*n[2]-n[0]*y[0]- n[1]*y[1]-n[2]*y[2] ) )*(1-cos(gamma)) + y[0]*cos(gamma) + (-x[2]*n[1]+x[1]*n[2]-n[2]*y[1]+n[1]*y[2] )*sin(gamma),
 		( x[1]*(n[0]*n[0]+n[2]*n[2]) - n[1]*( x[0]*n[0]+x[2]*n[2]-n[0]*y[0]- n[1]*y[1]-n[2]*y[2] ) )*(1-cos(gamma)) + y[1]*cos(gamma) + ( x[2]*n[0]-x[0]*n[2]+n[2]*y[0]-n[0]*y[2] )*sin(gamma),
 		( x[2]*(n[0]*n[0]+n[1]*n[1]) - n[2]*( x[0]*n[0]+x[1]*n[1]-n[0]*y[0]- n[1]*y[1]-n[2]*y[2] ) )*(1-cos(gamma)) + y[2]*cos(gamma) + (-x[1]*n[0]+x[0]*n[1]-n[1]*y[0]+n[0]*y[1] )*sin(gamma)
 	  );
 }
-dbl3 rotateAroundVec( dbl3 n, dbl3 y, double gamma)
-{
+dbl3 rotateAroundVec( dbl3 n, dbl3 y, double gamma)  {
 	return dbl3
 	  (	(  - n[0]*( -n[0]*y[0]- n[1]*y[1]-n[2]*y[2] ) )*(1-cos(gamma)) + y[0]*cos(gamma) + (n[1]*y[2]-n[2]*y[1])*sin(gamma),
 		(  - n[1]*( -n[0]*y[0]- n[1]*y[1]-n[2]*y[2] ) )*(1-cos(gamma)) + y[1]*cos(gamma) + (n[2]*y[0]-n[0]*y[2])*sin(gamma),
@@ -58,10 +56,9 @@ dbl3 rotateAroundVec( dbl3 n, dbl3 y, double gamma)
 
 
 
-int findOrInsertPoint(std::vector<dbl3>&  points, dbl3& point)
-{
+int findOrInsertPoint(vector<dbl3>&  points, dbl3& point)  {
 
-	for (std::vector<dbl3>::const_reverse_iterator  rip = points.rbegin(); rip != points.rbegin()+64 && rip != points.rend(); ++rip)
+	for (vector<dbl3>::const_reverse_iterator  rip = points.rbegin(); rip != points.rbegin()+64 && rip != points.rend(); ++rip)
 		if (*rip == point) return int(points.rend()-rip)-1;
 
 	points.push_back(point);
@@ -70,26 +67,24 @@ int findOrInsertPoint(std::vector<dbl3>&  points, dbl3& point)
 
 
 
-void insertHalfCorneroints2(std::vector<dbl3>&  points, std::vector<int>& cellPoints, dbl3 c1, dbl3 c2, dbl3 nE1, dbl3 nE2, double appexDist_inrR, double appexDist_outR,
-							double conAng1, double conAng2, double rOuter, double hafAng, double CARelax = 1.0)
-{
-	//const double convertToRad = _pi/180.0;
+void insertHalfCorneroints2(vector<dbl3>&  points, vector<int>& cellPoints, dbl3 c1, dbl3 c2, dbl3 nE1, dbl3 nE2, double appexDist_inrR, double appexDist_outR,
+							double conAng1, double conAng2, double rOuter, double hafAng, double CARelax = 1.)  {
+	//const double convertToRad = _pi/180.;
 	dbl3 dd = c2-c1;
-	dbl3 normal = dd/(mag(dd)+1.0e-32);
+	dbl3 normal = dd/(mag(dd)+1e-32);
 
-	std::vector<dbl3> hcPoints(8);
+	vector<dbl3> hcPoints(8);
 
 	dbl3 e1 = c1+nE1*rOuter;//. edgePoint
 	dbl3 nE11 = rotateAroundVec(normal,nE1,hafAng);
 
 	///. radii of curvature
 
-	double gama = std::abs(hafAng)*CARelax;
+	double gama = abs(hafAng)*CARelax;
 	double appex_iInnerR = appexDist_inrR*(cos(gama)+(sin(gama)/cos(gama+conAng1))*(sin(gama+conAng1)-1));
 	double appex_iOuterR = appexDist_outR*(cos(gama)+(sin(gama)/cos(gama+conAng2))*(sin(gama+conAng2)-1));
 
-	if(hafAng>0)
-	{
+	if(hafAng>0)  {
 		hcPoints[0] = e1-appex_iInnerR*nE1;
 		hcPoints[1] = e1-appex_iOuterR*nE1;
 		hcPoints[2] = e1-appexDist_outR*nE11;
@@ -107,8 +102,7 @@ void insertHalfCorneroints2(std::vector<dbl3>&  points, std::vector<int>& cellPo
 
 	 e1 = c2+nE2*rOuter;///. edgePoint
 	 nE11 = rotateAroundVec(normal,nE2,hafAng);
-	if(hafAng>0)
-	{
+	if(hafAng>0)  {
 		hcPoints[4] = e1-appex_iInnerR*nE2;
 		hcPoints[5] = e1-appex_iOuterR*nE2;
 		hcPoints[6] = e1-appexDist_outR*nE11;
@@ -124,8 +118,7 @@ void insertHalfCorneroints2(std::vector<dbl3>&  points, std::vector<int>& cellPo
 
 
 
-	for (int i=0;i<8;++i)
-	{///. 8 points each elem
+	for (int i=0;i<8;++i)  {///. 8 points each elem
 		int id=(findOrInsertPoint(points, hcPoints[i]));
 		cellPoints.push_back(id);
 	}
@@ -138,18 +131,16 @@ void insertHalfCorneroints2(std::vector<dbl3>&  points, std::vector<int>& cellPo
 
 
 //////////////////////////////////////////////////////////
- std::string vtkWriter_start(size_t nPoints, size_t nCells)
-	{
-		std::stringstream  str;
-		str<<"<?xml version = \"1.0\"?>\n"
+ string vtkWriter_start(size_t nPoints, size_t nCells)  {
+		stringstream  str;
+		str<<"<?xml version = \"1.\"?>\n"
 		   <<"<VTKFile type = \"UnstructuredGrid\" version = \"0.1\" byte_order = \"LittleEndian\">\n"
 		   <<"  <UnstructuredGrid>"
 		   <<"    <Piece NumberOfPoints = \""<<nPoints<<"\" NumberOfCells = \""<<nCells<<"\" >\n";
 		return str.str();
 	}
-	 std::string  vtkWriter_finish()
-	{
-		std::stringstream  str;
+	 string  vtkWriter_finish()  {
+		stringstream  str;
 		str<<"    </Piece>\n"
 		   <<"  </UnstructuredGrid>\n"
 		   <<"</VTKFile>\n";
@@ -160,15 +151,13 @@ void insertHalfCorneroints2(std::vector<dbl3>&  points, std::vector<int>& cellPo
 
 
 template<typename Type>
-void writeCellData(std::ofstream& outp, std::string name, const std::vector<Type> & data, string typeStr="Float32")
-{
+void writeCellData(ofstream& outp, string name, const vector<Type> & data, string typeStr="Float32")  {
 	outp<<"        <DataArray type = \""<<typeStr<<"\" Name = \""<<name<<"\" format = \"ascii\">\n";
-    for(size_t i = 0; i < data.size(); ++i)
-    {
+    for(size_t i = 0; i < data.size(); ++i)  {
         outp << data[i] << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
-	outp<<"        </DataArray>"<<std::endl;
+	outp<<"        </DataArray>"<<endl;
 }
 
 
@@ -178,19 +167,18 @@ void writeCellData(std::ofstream& outp, std::string name, const std::vector<Type
 
 void addThroatMesh(
 	 int ind,
-	 const std::vector<throatNE*>& throatIs,
+	 const vector<throatNE*>& throatIs,
 	 size_t trIndx,
-	 const std::vector<poreNE*>& poreIs,
-	 std::vector<dbl3>& points,
-	 std::vector<int>& subTypes,
-	 std::vector<size_t>& cellTrots,
-	 std::vector<int>& cellPors,
-	 std::vector<int>& cellPoints,
+	 const vector<poreNE*>& poreIs,
+	 vector<dbl3>& points,
+	 vector<int>& subTypes,
+	 vector<size_t>& cellTrots,
+	 vector<int>& cellPors,
+	 vector<int>& cellPoints,
 	 double scaleFactor,
 	 bool visualizeCorners,
 	 unsigned int thetaResulution
- )
-{
+ )  {
 	const throatNE * elem = throatIs[trIndx];
 	int porInd=(ind==1) ? elem->e1 : elem->e2;
 	const poreNE * elemp =  poreIs[porInd];
@@ -201,8 +189,7 @@ void addThroatMesh(
 	double r = elem->radius()*scaleFactor;
 
 
-	if (elem->e1<2 && ind==1)
-	{
+	if (elem->e1<2 && ind==1)  {
 		double throatIncLength=1.1*elem->radius()+2e-9;
 		c1[1] = c2[1];//y is wrong
 		c1[2] = c2[2];
@@ -210,8 +197,7 @@ void addThroatMesh(
 
 		c2[1] += 1e-9;	c2[2] += 1e-9;
 
-		if (c1[0]<c2[0])
-		{
+		if (c1[0]<c2[0])  {
 			c1[0] = c2[0] - throatIncLength;
 		}
 		else
@@ -219,8 +205,7 @@ void addThroatMesh(
 			c1[0] = c2[0] + throatIncLength;
 		}
 	}
-	if (elem->e2<2 && ind==2)
-	{
+	if (elem->e2<2 && ind==2)  {
 		double throatIncLength=1.1*elem->radius()+2e-9;
 
 		c2[1] = c1[1];//y is wrong
@@ -228,8 +213,7 @@ void addThroatMesh(
 
 		c2[1] += 1e-9;	c2[2] += 1e-9;
 
-		if (c2[0]<c1[0])
-		{
+		if (c2[0]<c1[0])  {
 			c2[0] = c1[0]-  throatIncLength;
 		}
 		else
@@ -239,27 +223,26 @@ void addThroatMesh(
 	}
 
 	dbl3 c1c2 = c2-c1;
-	dbl3 ncc = c1c2/(mag(c1c2)+1.0e-33);
-	dbl3 nCE(0.0,0.0,0.0);	///. pick a corner point for the first subElem
-	for(size_t i = 0;i<3;i++){ if (std::abs(ncc[i])<0.6){nCE[i] = 1.0;break;} ;}
+	dbl3 ncc = c1c2/(mag(c1c2)+1e-33);
+	dbl3 nCE(0.,0.,0.);	///. pick a corner point for the first subElem
+	for(size_t i = 0;i<3;i++){ if (abs(ncc[i])<0.6){nCE[i] = 1.;break;} ;}
 
 	nCE = ncc^nCE;
-	nCE=rotateAroundVec( ncc, nCE, _pi/4.0);
-	nCE = nCE/(mag(nCE)+1.0e-33);
+	nCE=rotateAroundVec( ncc, nCE, _pi/4.);
+	nCE = nCE/(mag(nCE)+1e-33);
 
 	{
 		int thetaResulutionp2 = (thetaResulution+1)/2;
 
-		for(int i = 0; i < 2*thetaResulutionp2; ++i)
-        {
+		for(int i = 0; i < 2*thetaResulutionp2; ++i)  {
 			double hafAng = 0.5*_pi/thetaResulutionp2;
 			nCE = rotateAroundVec(ncc,nCE,2*hafAng);
-			insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r,  0.0, 0.6*(_pi-hafAng),   0,  hafAng);
+			insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r,  0., 0.6*(_pi-hafAng),   0,  hafAng);
 			subTypes.push_back(5);
 			cellTrots.push_back(trIndx);
 			cellPors.push_back(porInd);
 
-			insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r,  0.0, 0.6*(_pi-hafAng),  0,  -hafAng);
+			insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r,  0., 0.6*(_pi-hafAng),  0,  -hafAng);
 			subTypes.push_back(5);
 			cellTrots.push_back(trIndx);
 			cellPors.push_back(porInd);
@@ -273,36 +256,31 @@ void addThroatMesh(
 
 
 
-void vtuWriteThroats(std::string suffix, const std::vector<poreNE*>& poreIs, const std::vector<throatNE*>& throatIs, double dx, dbl3 X0)
-{
+void vtuWriteThroats(string basNam, const vector<poreNE*>& poreIs, const vector<throatNE*>& throatIs, double dx, dbl3 X0)  {
 
 
 
-	std::vector<dbl3> points;
-	std::vector<int> subTypes;
-	std::vector<size_t> cellTrots;
+	vector<dbl3> points;
+	vector<int> subTypes;
+	vector<size_t> cellTrots;
 
-	std::vector<int> cellPoints;
+	vector<int> cellPoints;
     points.reserve(throatIs.size()*150);
     cellPoints.reserve(throatIs.size()*300);
     subTypes.reserve(throatIs.size()*50);
     cellTrots.reserve(throatIs.size()*50);
-	std::vector<int> cellPors;
+	vector<int> cellPors;
     cellPors.reserve(throatIs.size()*50);
 
 
 
-    for(size_t i = 0; i < throatIs.size(); ++i)
-    {
+    for(size_t i = 0; i < throatIs.size(); ++i)  {
 			addThroatMesh(1, throatIs,i,poreIs,points,subTypes,cellTrots,cellPors,cellPoints,0.2,false,4);
 			addThroatMesh(2, throatIs,i,poreIs,points,subTypes,cellTrots,cellPors,cellPoints,0.2,false,4);
-
     }
 
 
-	std::stringstream fileNamepp;
-    fileNamepp<< suffix<<".vtu";
-    std::ofstream outp(fileNamepp.str().c_str());
+    ofstream outp(basNam+".vtu");
 
 	outp<<vtkWriter_start(points.size(),subTypes.size());
 
@@ -310,8 +288,7 @@ void vtuWriteThroats(std::string suffix, const std::vector<poreNE*>& poreIs, con
 
 	outp<<"      <Points>\n";
 	outp<<"        <DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";
-    for(size_t i = 0; i < points.size(); ++i)
-    {
+    for(size_t i = 0; i < points.size(); ++i)  {
         outp << (points[i][0]*dx+X0[0])<< " " << (points[i][1]*dx+X0[1])<< " " << (points[i][2]*dx+X0[2])<< " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -320,8 +297,7 @@ void vtuWriteThroats(std::string suffix, const std::vector<poreNE*>& poreIs, con
 
 	outp<<"      <Cells>\n";///// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/
 	outp<<"        <DataArray type = \"Int32\" Name = \"connectivity\" format = \"ascii\">\n";
-    for(size_t i = 0; i < cellPoints.size(); ++i)
-    {
+    for(size_t i = 0; i < cellPoints.size(); ++i)  {
         outp << cellPoints[i] << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -329,16 +305,14 @@ void vtuWriteThroats(std::string suffix, const std::vector<poreNE*>& poreIs, con
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"Int32\" Name = \"offsets\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 8*i+8 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"UInt8\" Name = \"types\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 12 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -373,47 +347,44 @@ void vtuWriteThroats(std::string suffix, const std::vector<poreNE*>& poreIs, con
 
 void AddCylinder(	dbl3& c1, dbl3& c2, double r,
 	 size_t& poreIndx,
- 	 std::vector<dbl3>& points,
-	 std::vector<int>& subTypes,
-	 std::vector<int>& cellPores,
-	 std::vector<float>& alpha,
-	 std::vector<int>& cellPoints,
+ 	 vector<dbl3>& points,
+	 vector<int>& subTypes,
+	 vector<int>& cellPores,
+	 vector<float>& alpha,
+	 vector<int>& cellPoints,
 	 double& scaleFactor,
 	 unsigned int& thetaResulution
-)
-{
+)  {
 	dbl3 c1c2 = c2-c1;
-	dbl3 ncc = c1c2/(mag(c1c2)+1.0e-32);
-	dbl3 nCE(0.0,0.0,0.0);	///. pick a corner point for the first subElem
-	for(size_t i = 0;i<3;i++){ if (ncc[i]<0.6){nCE[i] = 1.0;break;} }
+	dbl3 ncc = c1c2/(mag(c1c2)+1e-32);
+	dbl3 nCE(0.,0.,0.);	///. pick a corner point for the first subElem
+	for(size_t i = 0;i<3;i++){ if (ncc[i]<0.6){nCE[i] = 1.;break;} }
 
 	nCE = ncc^nCE;
-	nCE = nCE/(mag(nCE)+1.0e-32);
+	nCE = nCE/(mag(nCE)+1e-32);
 
     //const Polygon* polyShape = dynamic_cast< const Polygon* >(elem->shape());
     //if(0 && polyShape) ///. for now ignore corners    { }	else
 	{
 		int thetaResulutionp2 = (thetaResulution+1)/2;
 
-		for(int i = 0; i < thetaResulutionp2; ++i)
-		{
+		for(int i = 0; i < thetaResulutionp2; ++i)  {
 			double hafAng = _pi/thetaResulutionp2;
 			double hafAngleAzim = 0.5*_pi/thetaResulutionp2;
 			nCE = rotateAroundVec(ncc,nCE,2*hafAng);
 			dbl3 lAzimuth1 = ncc^nCE; ///. normal to ncc and nE1
 			dbl3 nCE2 = rotateAroundVec(lAzimuth1,nCE,thetaResulutionp2*hafAngleAzim);///. edge-centre ncc vector
-			for(int j = 0; j < thetaResulutionp2; ++j)
-			{
+			for(int j = 0; j < thetaResulutionp2; ++j)  {
 
 				dbl3 nCE1 = nCE2;///. edge-centre ncc vector
-				nCE2 = rotateAroundVec(lAzimuth1,nCE2,hafAngleAzim*2.0);///. edge-centre ncc vector
+				nCE2 = rotateAroundVec(lAzimuth1,nCE2,hafAngleAzim*2.);///. edge-centre ncc vector
 
-				insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1.0e-18,  r, 0.0,0.0,   0,  hafAng,0.0); ///. Warning: CA is not implemented for spheres
+				insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1e-18,  r, 0.,0.,   0,  hafAng,0.); ///. Warning: CA is not implemented for spheres
 					subTypes.push_back(0);
 				cellPores.push_back(poreIndx);
 				//alpha.push_back(elem->shape()->containCOil());
 
-				insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1.0e-18,  r,  0.0,0.0,   0,  -hafAng,0.0);///. Warning: CA is not implemented for spheres
+				insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1e-18,  r,  0.,0.,   0,  -hafAng,0.);///. Warning: CA is not implemented for spheres
 					subTypes.push_back(0);
 				cellPores.push_back(poreIndx);
 				//alpha.push_back(elem->shape()->containCOil());
@@ -426,23 +397,22 @@ void AddCylinder(	dbl3& c1, dbl3& c2, double r,
 
 void addSpherePoreMesh
 (
-	 const std::vector<poreNE*>& poreIs,
+	 const vector<poreNE*>& poreIs,
 	 size_t poreIndx,
-	 const std::vector<throatNE*>& throatIs,
-	 std::vector<dbl3>& points,
-	 std::vector<int>& subTypes,
-	 std::vector<int>& cellPores,
-	 std::vector<float>& alpha,
-	 std::vector<int>& cellPoints,
+	 const vector<throatNE*>& throatIs,
+	 vector<dbl3>& points,
+	 vector<int>& subTypes,
+	 vector<int>& cellPores,
+	 vector<float>& alpha,
+	 vector<int>& cellPoints,
 	 double scaleFactor,
 	 unsigned int thetaResulution
-)
-{
+)  {
 	const poreNE * elem = poreIs[poreIndx];
 
 	dbl3 c1(elem->mb->fi,elem->mb->fj,elem->mb->fk);
 	dbl3 c2(elem->mb->fi,elem->mb->fj,elem->mb->fk);
-	c2[1] += 1.0e-12;
+	c2[1] += 1e-12;
 	double r = (elem->mb->R)*scaleFactor;
 	AddCylinder(c1, c2, r, poreIndx, points, subTypes, cellPores, alpha, cellPoints, scaleFactor, thetaResulution );
 }
@@ -450,54 +420,49 @@ void addSpherePoreMesh
 
 void addCylinderThroatMesh
 (
-	 const std::vector<throatNE*>& throatIs,
+	 const vector<throatNE*>& throatIs,
 	 size_t trotIndx,
-	 const std::vector<poreNE*>& poreIs,
-	 std::vector<dbl3>& points,
-	 std::vector<int>& subTypes,
-	 std::vector<int>& cellPores,
-	 std::vector<float>& alpha,
-	 std::vector<int>& cellPoints,
+	 const vector<poreNE*>& poreIs,
+	 vector<dbl3>& points,
+	 vector<int>& subTypes,
+	 vector<int>& cellPores,
+	 vector<float>& alpha,
+	 vector<int>& cellPoints,
 	 double scaleFactor,
 	 unsigned int thetaResulution
-)
-{
+)  {
 	const throatNE * elem = throatIs[trotIndx];
 
 	dbl3 c2(elem->mb22()->fi,elem->mb22()->fj,elem->mb22()->fk);
 	dbl3 c1 = c2;//elem->e1>SideImax ? dbl3(elem->mb1->i,elem->mb1->j,elem->mb1->k) : c2;
-	c2[1] += 1.0e-11;
+	c2[1] += 1e-11;
 	double r = elem->mb22()->R*scaleFactor;
 	AddCylinder(c1, c2, r, trotIndx, points, subTypes, cellPores, alpha, cellPoints, scaleFactor, thetaResulution );
 }
 
 
 
-void vtuWriteTHroatSpheres(std::string suffix, const std::vector<poreNE*>& poreIs, const std::vector<throatNE*>& throatIs, double dx, dbl3 X0)
-{
+void vtuWriteTHroatSpheres(string basNam, const vector<poreNE*>& poreIs, const vector<throatNE*>& throatIs, double dx, dbl3 X0)  {
 
-	std::vector<dbl3> points;
-	std::vector<int> subTypes;
-	std::vector<int> cellPores;
+	vector<dbl3> points;
+	vector<int> subTypes;
+	vector<int> cellPores;
 
-	std::vector<int> cellPoints;
+	vector<int> cellPoints;
     points.reserve(poreIs.size()*150);
     cellPoints.reserve(poreIs.size()*300);
     subTypes.reserve(poreIs.size()*50);
     cellPores.reserve(poreIs.size()*50);
-	std::vector<float> alpha;
+	vector<float> alpha;
     alpha.reserve(poreIs.size()*50);
 
 
-    for(size_t i = 0; i <  throatIs.size(); ++i)
-    {
+    for(size_t i = 0; i <  throatIs.size(); ++i)  {
         addCylinderThroatMesh(throatIs,i,poreIs,points,subTypes,cellPores,alpha,cellPoints,RadVTKFaCT,8);
     }
 
 
-	std::stringstream fileNamepp;
-    fileNamepp<<suffix<<".vtu";
-    std::ofstream outp(fileNamepp.str().c_str());
+    ofstream outp(basNam+".vtu");
 
 	outp<<vtkWriter_start(points.size(),subTypes.size());
 
@@ -506,8 +471,7 @@ void vtuWriteTHroatSpheres(std::string suffix, const std::vector<poreNE*>& poreI
 
 	outp<<"      <Points>\n";
 	outp<<"        <DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";
-    for(size_t i = 0; i < points.size(); ++i)
-    {
+    for(size_t i = 0; i < points.size(); ++i)  {
         outp << (points[i][0]*dx+X0[0])<< " " << (points[i][1]*dx+X0[1])<< " " << (points[i][2]*dx+X0[2])<< " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -516,24 +480,21 @@ void vtuWriteTHroatSpheres(std::string suffix, const std::vector<poreNE*>& poreI
 
 	outp<<"      <Cells>\n";///// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/
 	outp<<"        <DataArray type = \"Int32\" Name = \"connectivity\" format = \"ascii\">\n";
-    for(size_t i = 0; i < cellPoints.size(); ++i)
-    {
+    for(size_t i = 0; i < cellPoints.size(); ++i)  {
         outp << cellPoints[i] << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"Int32\" Name = \"offsets\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 8*i+8 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"UInt8\" Name = \"types\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 12 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -544,12 +505,12 @@ void vtuWriteTHroatSpheres(std::string suffix, const std::vector<poreNE*>& poreI
 
 	outp<<"      <CellData Scalars = \"alpha\">\n"; //////////////////////////////////////
 
-	std::vector<float> saturation(cellPores.size(),0.0);
-	std::vector<float> pis_c(cellPores.size(),0.0);
-	std::vector<float> p(cellPores.size(),0.0);
-	std::vector<float> p_o(cellPores.size(),0.0);
-	std::vector<float> p_w(cellPores.size(),0.0);
-	std::vector<float> elem_type(cellPores.size(),0.0);
+	vector<float> saturation(cellPores.size(),0.);
+	vector<float> pis_c(cellPores.size(),0.);
+	vector<float> p(cellPores.size(),0.);
+	vector<float> p_o(cellPores.size(),0.);
+	vector<float> p_w(cellPores.size(),0.);
+	vector<float> elem_type(cellPores.size(),0.);
 	writeCellData( outp, "subType",  subTypes);
 	writeCellData( outp, "type",  elem_type);
 	writeCellData( outp, "index",  cellPores, "Int32");
@@ -566,34 +527,30 @@ void vtuWriteTHroatSpheres(std::string suffix, const std::vector<poreNE*>& poreI
 
 
 
-void vtuWritePores(std::string suffix, const std::vector<poreNE*>& poreIs, const std::vector<throatNE*>& throatIs, double dx, dbl3 X0)
-{
+void vtuWritePores(string basNam, const vector<poreNE*>& poreIs, const vector<throatNE*>& throatIs, double dx, dbl3 X0)  {
 
-	std::vector<dbl3> points;
-	std::vector<int> subTypes;
-	std::vector<int> cellPores;
+	vector<dbl3> points;
+	vector<int> subTypes;
+	vector<int> cellPores;
 
-	std::vector<int> cellPoints;
-	//std::vector<FacePoints> facePoints;
-	//std::vector<CellFaces> cellFaces;
-	//std::vector<FaceCells> faceCells;
+	vector<int> cellPoints;
+	//vector<FacePoints> facePoints;
+	//vector<CellFaces> cellFaces;
+	//vector<FaceCells> faceCells;
 	points.reserve(poreIs.size()*200);
 	cellPoints.reserve(poreIs.size()*400);
 	subTypes.reserve(poreIs.size()*60);
 	cellPores.reserve(poreIs.size()*60);
-	std::vector<float> alpha;
+	vector<float> alpha;
 	alpha.reserve(poreIs.size()*60);
 
 
-	for(size_t i = 2; i <  poreIs.size(); ++i)
-	{
+	for(size_t i = 2; i <  poreIs.size(); ++i)  {
 	  addSpherePoreMesh(poreIs,i,throatIs,points,subTypes,cellPores,alpha,cellPoints,RadVTKFaCT,8);
 	}
 
 
-	std::stringstream fileNamepp;
-	fileNamepp<<suffix<<".vtu";
-	std::ofstream outp(fileNamepp.str().c_str());
+	ofstream outp(basNam+".vtu");
 
 	outp<<vtkWriter_start(points.size(),subTypes.size());
 
@@ -602,8 +559,7 @@ void vtuWritePores(std::string suffix, const std::vector<poreNE*>& poreIs, const
 
 	outp<<"      <Points>\n";
 	outp<<"        <DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";
-    for(size_t i = 0; i < points.size(); ++i)
-    {
+    for(size_t i = 0; i < points.size(); ++i)  {
         outp << (points[i][0]*dx+X0[0])<< " " << (points[i][1]*dx+X0[1])<< " " << (points[i][2]*dx+X0[2])<< " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -612,24 +568,21 @@ void vtuWritePores(std::string suffix, const std::vector<poreNE*>& poreIs, const
 
 	outp<<"      <Cells>\n";///// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/
 	outp<<"        <DataArray type = \"Int32\" Name = \"connectivity\" format = \"ascii\">\n";
-    for(size_t i = 0; i < cellPoints.size(); ++i)
-    {
+    for(size_t i = 0; i < cellPoints.size(); ++i)  {
         outp << cellPoints[i] << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"Int32\" Name = \"offsets\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 8*i+8 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"UInt8\" Name = \"types\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 12 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -640,12 +593,12 @@ void vtuWritePores(std::string suffix, const std::vector<poreNE*>& poreIs, const
 
 	outp<<"      <CellData Scalars = \"alpha\">\n"; //////////////////////////////////////
 
-	std::vector<float> saturation(cellPores.size(),0.0);
-	std::vector<float> pis_c(cellPores.size(),0.0);
-	std::vector<float> p(cellPores.size(),0.0);
-	std::vector<float> p_o(cellPores.size(),0.0);
-	std::vector<float> p_w(cellPores.size(),0.0);
-	std::vector<float> elem_type(cellPores.size(),0.0);
+	vector<float> saturation(cellPores.size(),0.);
+	vector<float> pis_c(cellPores.size(),0.);
+	vector<float> p(cellPores.size(),0.);
+	vector<float> p_o(cellPores.size(),0.);
+	vector<float> p_w(cellPores.size(),0.);
+	vector<float> elem_type(cellPores.size(),0.);
 	writeCellData( outp, "subType",  subTypes);
 	writeCellData( outp, "type",  elem_type);
 	writeCellData( outp, "index",  cellPores, "Int32");
@@ -680,14 +633,13 @@ void addMbMbMesh(
 	 const medialBall* vi,
 	 const medialBall* vj,
 	 size_t poreIndx,
-	 std::vector<dbl3>& points,
-	 std::vector<int>& subTypes,
-	 std::vector<int>& cellType,
-	 std::vector<int>& cellPores,
-	 std::vector<float>& radius,
-	 std::vector<int>& cellPoints
-	 )
-{
+	 vector<dbl3>& points,
+	 vector<int>& subTypes,
+	 vector<int>& cellType,
+	 vector<int>& cellPores,
+	 vector<float>& radius,
+	 vector<int>& cellPoints
+	 )  {
 
 	dbl3 c1(vi->fi,vi->fj,vi->fk);
 	dbl3 c2(vj->fi,vj->fj,vj->fk);
@@ -711,14 +663,13 @@ void addMbMbMbMesh(
 	 const medialBall* iKid,
 	 const medialBall* jKid,
 	 size_t poreIndx,
-	 std::vector<dbl3>& points,
-	 std::vector<int>& subTypes,
-	 std::vector<int>& cellType,
-	 std::vector<int>& cellPores,
-	 std::vector<float>& radius,
-	 std::vector<int>& cellPoints
-	 )
-{
+	 vector<dbl3>& points,
+	 vector<int>& subTypes,
+	 vector<int>& cellType,
+	 vector<int>& cellPores,
+	 vector<float>& radius,
+	 vector<int>& cellPoints
+	 )  {
 
 	dbl3 c1(vi->fi,vi->fj,vi->fk);
 	dbl3 c2(iKid->fi,iKid->fj,iKid->fk);
@@ -746,19 +697,18 @@ void addMbMbMbMesh(
 
 
 
-void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpace, const  std::vector<poreNE*> poreIs, const voxelField<int>&  VElems, double dx, dbl3 X0 )
-{
+void vtuWriteMbMbs(string basNam, const vector<medialBall*>& ballSpace, const  vector<poreNE*> poreIs, const voxelField<int>&  VElems, double dx, dbl3 X0 )  {
 
-	std::vector<dbl3> points;
-	std::vector<int> subTypes;
-	std::vector<int> cellType;
-	std::vector<int> cellPores;
-	std::vector<float> radius;
+	vector<dbl3> points;
+	vector<int> subTypes;
+	vector<int> cellType;
+	vector<int> cellPores;
+	vector<float> radius;
 
-	std::vector<int> cellPoints;
-	//std::vector<FacePoints> facePoints;
-	//std::vector<CellFaces> cellFaces;
-	//std::vector<FaceCells> faceCells;
+	vector<int> cellPoints;
+	//vector<FacePoints> facePoints;
+	//vector<CellFaces> cellFaces;
+	//vector<FaceCells> faceCells;
     points.reserve(ballSpace.size()*2);
     cellPoints.reserve(ballSpace.size()*2);
     subTypes.reserve(ballSpace.size()*2);
@@ -767,12 +717,10 @@ void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpa
     radius.reserve(ballSpace.size()*2);
 
 
-	std::vector<medialBall*>::const_iterator vi = ballSpace.begin();
-	std::vector<medialBall*>::const_iterator vend = ballSpace.end();
-	while (vi<vend)
-	{
-		if ((*vi)->boss != NULL)
-		{
+	vector<medialBall*>::const_iterator vi = ballSpace.begin();
+	vector<medialBall*>::const_iterator vend = ballSpace.end();
+	while (vi<vend)  {
+		if ((*vi)->boss != nullptr)  {
 			medialBall* mvi=(*vi)->mastrSphere();
 			int id=VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1);
 			addMbMbMesh(*vi, (*vi)->boss , id,points,subTypes,cellType,cellPores,radius,cellPoints);
@@ -797,7 +745,7 @@ void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpa
     }
 
 
-    std::ofstream outp((baseName+".vtu").c_str());
+    ofstream outp(basNam+".vtu");
 
 	outp<<vtkWriter_start(points.size(),subTypes.size());
 
@@ -806,8 +754,7 @@ void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpa
 
 	outp<<"      <Points>\n";
 	outp<<"        <DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";
-    for(size_t i = 0; i < points.size(); ++i)
-    {
+    for(size_t i = 0; i < points.size(); ++i)  {
         outp << (points[i][0]*dx+X0[0])<< " " << (points[i][1]*dx+X0[1])<< " " << (points[i][2]*dx+X0[2])<< " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -816,16 +763,14 @@ void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpa
 
 	outp<<"      <Cells>\n";///// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/
 	outp<<"        <DataArray type = \"Int32\" Name = \"connectivity\" format = \"ascii\">\n";
-    for(size_t i = 0; i < cellPoints.size(); ++i)
-    {
+    for(size_t i = 0; i < cellPoints.size(); ++i)  {
         outp << cellPoints[i] << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"Int32\" Name = \"offsets\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 2*i+2 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -833,8 +778,7 @@ void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpa
 
 
 	outp<<"	<DataArray type = \"UInt8\" Name = \"types\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 3 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -854,11 +798,11 @@ void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpa
 	outp<<"      <PointData>\n"; //////////////////////////////////////
         outp<<"        <DataArray type = \""<<"Float32"<<"\" Name = \""<<"radius"<<"\" format = \"ascii\">\n";
         for(size_t i = 0; i < radius.size(); ++i) { outp<<radius[i]<<" ";  if((i+1)%20 == 0) outp << "\n"; }
-        outp<<"        </DataArray>"<<std::endl;
+        outp<<"        </DataArray>"<<endl;
 
         outp<<"        <DataArray type = \""<<"Float32"<<"\" Name = \""<<"cellType"<<"\" format = \"ascii\">\n";
         for(size_t i = 0; i < cellType.size(); ++i) { outp<<cellType[i]<<" ";  if((i+1)%20 == 0) outp << "\n"; }
-        outp<<"        </DataArray>"<<std::endl;
+        outp<<"        </DataArray>"<<endl;
 	outp<<"      </PointData>\n"; /////////////////////////////////////////////////////////
 
 
@@ -870,23 +814,22 @@ void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpa
 
 
 
-void vtuWriteMedialSurface(std::string baseName,
- const std::vector<medialBall*>& ballSpace,
- const  std::vector<poreNE*> poreIs,
+void vtuWriteMedialSurface(string basNam,
+ const vector<medialBall*>& ballSpace,
+ const  vector<poreNE*> poreIs,
  const voxelField<int>&  VElems, double dx, dbl3 X0
- )
-{
+ )  {
 
-	std::vector<dbl3> points;
-	std::vector<int> subTypes;
-	std::vector<int> cellPores;
-	std::vector<int> cellType;
-	std::vector<float> radius;
+	vector<dbl3> points;
+	vector<int> subTypes;
+	vector<int> cellPores;
+	vector<int> cellType;
+	vector<float> radius;
 
-	std::vector<int> cellPoints;
-	//std::vector<FacePoints> facePoints;
-	//std::vector<CellFaces> cellFaces;
-	//std::vector<FaceCells> faceCells;
+	vector<int> cellPoints;
+	//vector<FacePoints> facePoints;
+	//vector<CellFaces> cellFaces;
+	//vector<FaceCells> faceCells;
     points.reserve(ballSpace.size()*2);
     cellPoints.reserve(ballSpace.size()*2);
     subTypes.reserve(ballSpace.size()*2);
@@ -895,29 +838,23 @@ void vtuWriteMedialSurface(std::string baseName,
     radius.reserve(ballSpace.size()*2);
 
 
-	std::vector<medialBall*>::const_iterator vi = ballSpace.begin();
-	std::vector<medialBall*>::const_iterator vend = ballSpace.end();
-	while (vi<vend)
-	{
-		if ((*vi)->boss != NULL)
-		{
-			medialBall* mvi=(*vi)->mastrSphere();
-			int id=VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1);
+	//vector<medialBall*>::const_iterator vi = ballSpace.begin();
+	//vector<medialBall*>::const_iterator vend = ballSpace.end();
+	//while (vi<vend)  {
+		//if ((*vi)->boss != nullptr)  {
+			//medialBall* mvi=(*vi)->mastrSphere();
+			//int id=VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1);
 
-			for (int i=0;i<(*vi)->nNeis;++i)
-			{
+			//for (int i=0;i<(*vi)->nNeis;++i)  {
 					//{addMbMbMbMesh((*vi)->boss, *vi, (*vi)->neis[i], id,points,subTypes,cellType,cellPores,radius,cellPoints);}
-					//if((*vi)->boss!=(*vi)->neis[i]->boss)
-					{addMbMbMbMesh((*vi)->boss, (*vi)->neis[i]->boss, (*vi), (*vi)->neis[i], id,points,subTypes,cellType,cellPores,radius,cellPoints);}
-			}
+					//if((*vi)->boss!=(*vi)->neis[i]->boss)  {addMbMbMbMesh((*vi)->boss, (*vi)->neis[i]->boss, (*vi), (*vi)->neis[i], id,points,subTypes,cellType,cellPores,radius,cellPoints);}
+			//}
+		//}
+		//++vi;
+    //}
 
 
-		}
-		++vi;
-    }
-
-
-    std::ofstream outp((baseName+".vtu").c_str());
+    ofstream outp(basNam+".vtu");
 
 	outp<<vtkWriter_start(points.size(),subTypes.size());
 
@@ -926,26 +863,23 @@ void vtuWriteMedialSurface(std::string baseName,
 
 	outp<<"      <Points>\n";
 	outp<<"        <DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";
-    for(size_t i = 0; i < points.size(); ++i)
-    {
+    for(size_t i = 0; i < points.size(); ++i)  {
         outp << (points[i][0]*dx+X0[0])<< " " << (points[i][1]*dx+X0[1])<< " " << (points[i][2]*dx+X0[2])<< " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 	outp<<"      </Points>\n";
 
-	outp<<"      <Cells>\n";///// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/
+	outp<<"      <Cells>\n";///// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.
 	outp<<"        <DataArray type = \"Int32\" Name = \"connectivity\" format = \"ascii\">\n";
-    for(size_t i = 0; i < cellPoints.size(); ++i)
-    {
+    for(size_t i = 0; i < cellPoints.size(); ++i)  {
         outp << cellPoints[i] << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"Int32\" Name = \"offsets\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 4*i+4 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -953,8 +887,7 @@ void vtuWriteMedialSurface(std::string baseName,
 
 
 	outp<<"	<DataArray type = \"UInt8\" Name = \"types\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 5 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -977,11 +910,11 @@ void vtuWriteMedialSurface(std::string baseName,
 	outp<<"      <PointData>\n"; //////////////////////////////////////
         outp<<"        <DataArray type = \""<<"Float32"<<"\" Name = \""<<"radius"<<"\" format = \"ascii\">\n";
         for(size_t i = 0; i < radius.size(); ++i) { outp<<radius[i]<<" ";  if((i+1)%20 == 0) outp << "\n"; }
-        outp<<"        </DataArray>"<<std::endl;
+        outp<<"        </DataArray>"<<endl;
 
         outp<<"        <DataArray type = \""<<"Float32"<<"\" Name = \""<<"cellType"<<"\" format = \"ascii\">\n";
         for(size_t i = 0; i < cellType.size(); ++i) { outp<<cellType[i]<<" ";  if((i+1)%20 == 0) outp << "\n"; }
-        outp<<"        </DataArray>"<<std::endl;
+        outp<<"        </DataArray>"<<endl;
 	outp<<"      </PointData>\n"; /////////////////////////////////////////////////////////
 
 
@@ -994,23 +927,22 @@ void vtuWriteMedialSurface(std::string baseName,
 
 
 
-void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *********
- const std::vector<throatNE*>& throatIs,
- const  std::vector<poreNE*> poreIs,
+void vtuWriteThroatMbMbs(string basNam,      /// ********* throat *********
+ const vector<throatNE*>& throatIs,
+ const  vector<poreNE*> poreIs,
  const voxelField<int>&  VElems, double dx, dbl3 X0
- )
-{
+ )  {
 
-	std::vector<dbl3> points;
-	std::vector<int> subTypes;
-	std::vector<int> cellType;
-	std::vector<int> cellPores;
-	std::vector<float> radius;
+	vector<dbl3> points;
+	vector<int> subTypes;
+	vector<int> cellType;
+	vector<int> cellPores;
+	vector<float> radius;
 
-	std::vector<int> cellPoints;
-	//std::vector<FacePoints> facePoints;
-	//std::vector<CellFaces> cellFaces;
-	//std::vector<FaceCells> faceCells;
+	vector<int> cellPoints;
+	//vector<FacePoints> facePoints;
+	//vector<CellFaces> cellFaces;
+	//vector<FaceCells> faceCells;
     points.reserve(throatIs.size()*20);
     cellPoints.reserve(throatIs.size()*20);
     subTypes.reserve(throatIs.size()*20);
@@ -1020,19 +952,18 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 
 	int E2msfc=0, E_msfd=0, E8msgl=0, Dkfhj2=0, Dkfhj1=0;
 
-	std::vector<throatNE*>::const_iterator tbgn = throatIs.begin();
-	std::vector<throatNE*>::const_iterator ti = throatIs.begin();
-	std::vector<throatNE*>::const_iterator tend = throatIs.end();
+	vector<throatNE*>::const_iterator tbgn = throatIs.begin();
+	vector<throatNE*>::const_iterator ti = throatIs.begin();
+	vector<throatNE*>::const_iterator tend = throatIs.end();
 	//int poreIndex(0);
-	while (ti<tend)
-	{
+	while (ti<tend)  {
 
 
 
 
 		const medialBall * mb2 = (*ti)->mb22();
 		const medialBall * mb1 = (*ti)->mb11();
-		if (mb1 != NULL)
+		if (mb1 != nullptr)
 			addMbMbMesh(mb1, mb2 ,(ti-tbgn)+poreIs.size()*10,points,subTypes,cellType,cellPores,radius,cellPoints);
 		else if ((*ti)->e1>2) cout<<" EioMbk ";
 
@@ -1040,17 +971,15 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 		if ((*ti)->e2 != VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1)) ++Dkfhj1;//cout<<" Dkfhj1  "<< VElems[mvi->k+1][mvi->j+1][mvi->i+1]<<"   ";
 		if (mb2->boss == mb2) ++E_msfd;
 
-		while (mb2->boss != mb2)
-		{
+		while (mb2->boss != mb2)  {
 
 			addMbMbMesh( mb2 , mb2->boss , (*ti)->e2,points,subTypes,cellType,cellPores,radius,cellPoints);
 			mb2 = mb2->boss;
 
 		}
 
-		if (mb1 != NULL && mb1->boss == mb1) ++E2msfc;
-		while ( mb1 != NULL && mb1->boss != mb1)
-		{
+		if (mb1 != nullptr && mb1->boss == mb1) ++E2msfc;
+		while ( mb1 != nullptr && mb1->boss != mb1)  {
 
 			mvi=mb1->mastrSphere();
 			if ((*ti)->e1 != VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1)) ++Dkfhj2;//cout<<" Dkfhj2  "<< VElems[mvi->k+1][mvi->j+1][mvi->i+1]<<"   ";
@@ -1070,7 +999,7 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 	if (E2msfc+E_msfd+Dkfhj2+E8msgl+Dkfhj1)
 	   cout<<"\n ******************** bads mb1->boss==mb1: "<<E2msfc<<"   mb2->boss==mb2 = "<<E_msfd<<"   e1!=VElem = "<<Dkfhj2<<"   mb1==mb2 = "<<E8msgl<<"   e2!=VElem = "<<Dkfhj1<<endl;
 
-    std::ofstream outp((baseName+".vtu").c_str());
+	ofstream outp(basNam+".vtu");
 
 	outp<<vtkWriter_start(points.size(),subTypes.size());
 
@@ -1079,8 +1008,7 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 
 	outp<<"      <Points>\n";
 	outp<<"        <DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";
-    for(size_t i = 0; i < points.size(); ++i)
-    {
+    for(size_t i = 0; i < points.size(); ++i)  {
         outp << (points[i][0]*dx+X0[0])<< " " << (points[i][1]*dx+X0[1])<< " " << (points[i][2]*dx+X0[2])<< " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -1089,24 +1017,21 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 
 	outp<<"      <Cells>\n";///// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/
 	outp<<"        <DataArray type = \"Int32\" Name = \"connectivity\" format = \"ascii\">\n";
-    for(size_t i = 0; i < cellPoints.size(); ++i)
-    {
+    for(size_t i = 0; i < cellPoints.size(); ++i)  {
         outp << cellPoints[i] << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"Int32\" Name = \"offsets\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 2*i+2 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
 	outp<<"\n        </DataArray>\n";
 
 	outp<<"	<DataArray type = \"UInt8\" Name = \"types\" format = \"ascii\">\n";
-    for(size_t i = 0; i < subTypes.size(); ++i)
-    {
+    for(size_t i = 0; i < subTypes.size(); ++i)  {
         outp << 3 << " ";
         if ((i+1)%20 == 0)     outp << "\n";
     }
@@ -1117,11 +1042,11 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 	outp<<"      <PointData>\n"; //////////////////////////////////////
         outp<<"        <DataArray type = \""<<"Float32"<<"\" Name = \""<<"radius"<<"\" format = \"ascii\">\n";
         for(size_t i = 0; i < radius.size(); ++i) { outp<<radius[i]<<" ";  if((i+1)%20 == 0) outp << "\n"; }
-        outp<<"        </DataArray>"<<std::endl;
+        outp<<"        </DataArray>"<<endl;
 
         outp<<"        <DataArray type = \""<<"Float32"<<"\" Name = \""<<"cellType"<<"\" format = \"ascii\">\n";
         for(size_t i = 0; i < cellType.size(); ++i) { outp<<cellType[i]<<" ";  if((i+1)%20 == 0) outp << "\n"; }
-        outp<<"        </DataArray>"<<std::endl;
+        outp<<"        </DataArray>"<<endl;
 	outp<<"      </PointData>\n"; /////////////////////////////////////////////////////////
 
 

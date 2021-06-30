@@ -15,10 +15,10 @@ unsigned int growPores_X2(voxelField<int>&  VElems, int bgn, int lst, int porVal
 	long long nChanges(0);
 
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for ( int k = 1; k<int(voxls.nz())-1 ; ++k )
+	for (int k=1; k<int(voxls.nz())-1; ++k)
 	{
-	  for ( int j = 1; j<int(voxls.ny())-1 ; ++j )
-		for ( int i = 1; i<int(voxls.nx())-1 ; ++i )
+	  for (int j=1; j<int(voxls.ny())-1; ++j)
+		for (int i=1; i<int(voxls.nx())-1; ++i)
 		{
 			const int* pijk = &voxls(i,j,k);
 		  if (*pijk == porValue)
@@ -41,10 +41,10 @@ unsigned int growPores_X2(voxelField<int>&  VElems, int bgn, int lst, int porVal
 	cout<<"  ngrowX3:"<<nChanges<<","; nChanges=0;
 
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for ( int k = 1; k<int(VElems.nz())-1 ; ++k )
+	for (int k=1; k<VElems.nz()-1; ++k)
 	{
-	  for ( int j = 1; j<int(VElems.ny())-1 ; ++j )
-		for ( int i = 1; i<int(VElems.nx())-1 ; ++i )
+	  for (int j=1; j<VElems.ny()-1; ++j)
+		for (int i=1; i<VElems.nx()-1; ++i)
 		{
 			const int* pijk = &VElems(i,j,k);
 		  if (*pijk == porValue)
@@ -67,10 +67,10 @@ unsigned int growPores_X2(voxelField<int>&  VElems, int bgn, int lst, int porVal
 	cout<<nChanges<<","; nChanges=0;
 
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for ( int k = int(VElems.nz())-2; k>=1 ; --k )
+	for (int k = VElems.nz()-2; k>=1 ; --k )
 	{
-	  for ( int j = int(VElems.ny())-2; j>=1 ; --j )
-		for ( int i = int(VElems.nx())-2; i>=1 ; --i )
+	  for (int j = VElems.ny()-2; j>=1 ; --j )
+		for (int i = VElems.nx()-2; i>=1 ; --i )
 		{
 			const int* pijk = &VElems(i,j,k);
 		  if (*pijk == porValue)
@@ -107,10 +107,10 @@ void growPores(voxelField<int>&  VElems, int bgn, int lst, int porValue)
 	long long nChanges(0);
 
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for ( int k = 1; k<int(voxls.nz())-1 ; ++k )
+	for (int k=1; k<int(voxls.nz())-1; ++k)
 	{
-	  for ( int j = 1; j<int(voxls.ny())-1 ; ++j )
-		for ( int i = 1; i<int(voxls.nx())-1 ; ++i )
+	  for (int j=1; j<int(voxls.ny())-1; ++j)
+		for (int i=1; i<int(voxls.nx())-1; ++i)
 		{
 			 if (VElems(i,j,k) == porValue)
 			 {
@@ -144,8 +144,8 @@ void retreatPoresMedian(const inputDataNE & cg, voxelField<int>&  VElems, long b
 	voxelField<int> voxls = VElems;
 	long long nChanges(0);
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for (short k = 1; k <= cg.nz; ++k)
-	{for (short j = 1; j <= cg.ny; ++j)
+	for (short k=1; k<=cg.nz; ++k)
+	{for (short j=1; j<=cg.ny; ++j)
 	 {const segments& s = cg.segs_[k-1][j-1];
 	  for (short ix = 0; ix<s.cnt; ++ix)
 	  {	for (short i = s.s[ix].start+1; i <= s.s[ix+1].start; ++i)
@@ -200,8 +200,8 @@ void growPoresMedStrict(const inputDataNE & cg, voxelField<int>&  VElems, long b
 	voxelField<int> voxls = VElems;
 	long long nChanges(0);
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for (short k = 1; k <= cg.nz; ++k)
-	{for (short j = 1; j <= cg.ny; ++j)
+	for (short k=1; k<=cg.nz; ++k)
+	{for (short j=1; j<=cg.ny; ++j)
 	 {const segments& s = cg.segs_[k-1][j-1];
 	  for (short ix = 0; ix<s.cnt; ++ix)
 	  {	for (short i = s.s[ix].start+1; i <= s.s[ix+1].start; ++i)
@@ -269,8 +269,8 @@ void growPoresMedian(const inputDataNE & cg, voxelField<int>&  VElems, long bgn,
 	const voxelField<int> voxls = VElems;
 	long long nChanges(0);
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for (short k = 1; k <= cg.nz; ++k)
-	{for (short j = 1; j <= cg.ny; ++j)
+	for (short k=1; k<=cg.nz; ++k)
+	{for (short j=1; j<=cg.ny; ++j)
 	 {const segments& s = cg.segs_[k-1][j-1];
 	  for (short ix = 0; ix<s.cnt; ++ix)
 	  {	for (short i = s.s[ix].start+1; i <= s.s[ix+1].start; ++i)
@@ -345,8 +345,8 @@ void growPoresMedEqs(const inputDataNE & cg, voxelField<int>&  VElems, long bgn,
 	const voxelField<int> voxls = VElems;
 	long long nChanges(0);
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for (short k = 1; k <= cg.nz; ++k)
-	{for (short j = 1; j <= cg.ny; ++j)
+	for (short k=1; k<=cg.nz; ++k)
+	{for (short j=1; j<=cg.ny; ++j)
 	 {const segments& s = cg.segs_[k-1][j-1];
 	  for (short ix = 0; ix<s.cnt; ++ix)
 	  {	for (short i = s.s[ix].start+1; i <= s.s[ix+1].start; ++i)
@@ -420,8 +420,8 @@ void growPoresMedEqsLoose(const inputDataNE & cg, voxelField<int>&  VElems, long
 	voxelField<int> voxls = VElems;
 	long long nChanges(0);
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for (short k = 1; k <= cg.nz; ++k)
-	{for (short j = 1; j <= cg.ny; ++j)
+	for (short k=1; k<=cg.nz; ++k)
+	{for (short j=1; j<=cg.ny; ++j)
 	 {const segments& s = cg.segs_[k-1][j-1];
 	  for (short ix = 0; ix<s.cnt; ++ix)
 	  {	for (short i = s.s[ix].start+1; i <= s.s[ix+1].start; ++i)
@@ -496,8 +496,8 @@ void medianElem(const inputDataNE & cg, voxelField<int>&  VElems, long bgn,  lon
 	voxelField<int> voxls = VElems;
 	long long nChanges(0);
 	OMPragma("omp parallel for reduction(+:nChanges)")
-	for (short k = 1; k <= cg.nz; ++k)
-	{for (short j = 1; j <= cg.ny; ++j)
+	for (short k=1; k<=cg.nz; ++k)
+	{for (short j=1; j<=cg.ny; ++j)
 	 {const segments& s = cg.segs_[k-1][j-1];
 	  for (short ix = 0; ix<s.cnt; ++ix)
 	  {	for (short i = s.s[ix].start+1; i <= s.s[ix+1].start; ++i)
@@ -540,7 +540,7 @@ void medianElem(const inputDataNE & cg, voxelField<int>&  VElems, long bgn,  lon
 			 neI = voxls.v_j(1,pijk);	 if (neI != pID && bgn <= neI && lst>= neI) 	 ++(neis.insert(pair<int,short>(neI,0)).first->second);
 			 neI = voxls.v_k(-1,pijk);	 if (neI != pID && bgn <= neI && lst>= neI) 	 ++(neis.insert(pair<int,short>(neI,0)).first->second);
 			 neI = voxls.v_k(1,pijk);	 if (neI != pID && bgn <= neI && lst>= neI) 	 ++(neis.insert(pair<int,short>(neI,0)).first->second);
-			 for (map<int,short>::iterator neitr = neis.begin();neitr != neis.end();++neitr)
+			 for (map<int,short>::iterator neitr = neis.begin();neitr != neis.end(); ++neitr)
 			 {
 				if (neitr->second > nSameID)
 				{

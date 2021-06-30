@@ -37,7 +37,7 @@ runApp()
         echo "  rm $PWD/$LOG_NAME"
     else
         echo "Running $APP_NAME $@  >  $PWD/$LOG_NAME"
-        $APP_RUN "$@" > $LOG_NAME 2>&1
+        nice $APP_RUN "$@" > $LOG_NAME 2>&1
         [[ $? == 0 ]] || echo "Error: $APP_RUN  $@,  exit status: $?, see $(pwd)/$LOG_NAME" >&2
     fi
     sleep .1
@@ -66,11 +66,11 @@ runMPI()
         echo "  rm $PWD/$LOG_NAME"
     elif [ "$np" == "1" ] ; then
         echo "Running $APP_NAME $@  >  $PWD/$LOG_NAME"
-        $APP_RUN "$@" > $LOG_NAME 2>&1		
+        nice  $APP_RUN "$@" > $LOG_NAME 2>&1		
     else
         echo "Running $APP_NAME $@  >  $PWD/$LOG_NAME , using $np processes"
-        #~ ( mpirun -x LD_LIBRARY_PATH -x PATH -x WM_PROJECT_DIR -x WM_PROJECT_INST_DIR -x MPI_BUFFER_SIZE         --mca btl_tcp_if_exclude lo --mca btl_tcp_if_exclude eth0:avahi  --hostfile  machines.txt -np $np $APP_RUN  -parallel "$@" < /dev/null > $LOG_NAME 2>&1 )
-        ( mpirun.openmpi  -np $np $APP_RUN -parallel "$@" < /dev/null > $LOG_NAME 2>&1 )
+        #  ( mpirun -x LD_LIBRARY_PATH -x PATH -x WM_PROJECT_DIR -x WM_PROJECT_INST_DIR -x MPI_BUFFER_SIZE         --mca btl_tcp_if_exclude lo --mca btl_tcp_if_exclude eth0:avahi  --hostfile  machines.txt -np $np $APP_RUN  -parallel "$@" < /dev/null > $LOG_NAME 2>&1 )
+        nice mpirun.openmpi  -np $np $APP_RUN -parallel "$@" < /dev/null > $LOG_NAME 2>&1
         [[ $? == 0 ]] || echo "Error: $APP_RUN -parallel $@,  exit status: $?, see $(pwd)/$LOG_NAME" >&2
     fi
     sleep .1
@@ -97,12 +97,10 @@ runDistributed()
         echo "$PWD/$LOG_NAME"
     else
         echo "Running $APP_NAME $@  >  $PWD/$LOG_NAME , using $np processes"
-        ( mpirun.openmpi -x LD_LIBRARY_PATH -x PATH -x WM_PROJECT_DIR -x WM_PROJECT_INST_DIR -x MPI_BUFFER_SIZE \
+        nice mpirun.openmpi -x LD_LIBRARY_PATH -x PATH -x WM_PROJECT_DIR -x WM_PROJECT_INST_DIR -x MPI_BUFFER_SIZE \
           --mca btl_tcp_if_exclude lo,eth0:avahi --hostfile $SP_SCRIPTS/machines.txt \
-          -np $np $APP_RUN  -parallel "$@" < /dev/null > $LOG_NAME 2>&1 )
-        #~ ( mpirun -np $np $APP_RUN  -parallel "$@" < /dev/null > $LOG_NAME 2>&1 )
+          -np $np $APP_RUN  -parallel "$@" < /dev/null > $LOG_NAME 2>&1
         [[ $? == 0 ]] || echo "Error: $APP_RUN -parallel $@,  exit status: $?, see $(pwd)/$LOG_NAME" >&2
-
     fi
     sleep .1
 }
@@ -112,11 +110,11 @@ runDistributed()
 ### dictionary helpers  ------------------------------------------------
 
 
-setKeywordValues()  {  sed -i 's/^[ \t]*'"$1"'[ \t:].*$/'"    $1   $2; "'/g' $3;  }
+setKeywordValues()  {  sed -i 's:^[ \t]*'"$1"'[ \t:].*$:'"    $1   $2; "':g' $3;  }
 
 addSetKeyValue()
 {
-   ( grep -q -G "^[ \t]*$1" $3 && sed -i 's/^[ \t]*'"$1"'[ \t:].*$/'" $1     $2 ;"'/g' $3 ) || echo " $1     $2 ;"  >> $3
+   ( grep -q -G "^[ \t]*$1" $3 && sed -i 's:^[ \t]*'"$1"'[ \t:].*$:'" $1     $2 ;"':g' $3 ) || echo " $1     $2 ;"  >> $3
 }
 
 strKeyValueOr()
@@ -284,9 +282,9 @@ RunUpdateBlockMeshDict()
    printf "  [X0+N]*dx:    ${Offset[*]}   +  ${DimSize[*]}   *  ${dx[*]}\n"
 
 
-   N[0]=`echo "scale=0; (${DimSize[0]}*$nRefin/$SHMRefine-2*$nSkip/$SHMRefine+0.001)/1.0" | bc`
-   N[1]=`echo "scale=0; (${DimSize[1]}*$nRefin/$SHMRefine-2*$nSkip/$SHMRefine+0.001)/1.0" | bc`
-   N[2]=`echo "scale=0; (${DimSize[2]}*$nRefin/$SHMRefine-2*$nSkip/$SHMRefine+0.001)/1.0" | bc`
+   N[0]=`echo "scale=0; (${DimSize[0]}*$nRefin/$SHMRefine-2*$nSkip/$SHMRefine+0.001)/1." | bc`
+   N[1]=`echo "scale=0; (${DimSize[1]}*$nRefin/$SHMRefine-2*$nSkip/$SHMRefine+0.001)/1." | bc`
+   N[2]=`echo "scale=0; (${DimSize[2]}*$nRefin/$SHMRefine-2*$nSkip/$SHMRefine+0.001)/1." | bc`
 
 
    printf "  mesh size ?= $SHMRefine * backgound mesh size (${N[*]})\n" 

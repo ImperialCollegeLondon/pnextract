@@ -1,5 +1,5 @@
-#ifndef POROUSBLOCK_H
-#define POROUSBLOCK_H
+#ifndef BLOCKNET_H
+#define BLOCKNET_H
 
 
 
@@ -11,6 +11,22 @@
 #include "inputData.h"
 #include "medialSurf.h"
 
+#define _SideRadius 1
+#define RLEVEL3 0.7
+
+#define NINE 7
+#define _r10(_id)  ((_id)>>3)
+#define _pc10(_id) ((_id)-(((_id) >> 3)<<3))
+#define _x10(_id)  ((_id)<<3)
+
+#define SubElem0 nElems
+
+
+
+#define _frmtd_(_d_m,_p_m,_w_m) setw(_w_m)<<(1./_p_m)*round((_d_m)*_p_m)
+#define _frmtd3_(_d_m,_p_m,_w_m)  _frmtd_((_d_m)._0(),_p_m,_w_m) <<" "<< _frmtd_((_d_m)._1(),_p_m,_w_m) <<" "<< _frmtd_((_d_m)._2(),_p_m,_w_m)
+
+
 
 
 int nextract(inputDataNE& cfg, bool verbos=true);
@@ -21,8 +37,8 @@ class blockNetwork
 {
  public:
 
-	blockNetwork(medialSurface*& rs, const inputDataNE& c)
-	: srf(rs), cg(c), maxNCors(5) {};
+	blockNetwork(medialSurface*& rs, const inputDataNE& cfg)
+	: srf(rs), cg(cfg), maxNCors(5) { nBP6=cfg.nBP6; SideImax=nBP6-1; };
 
 
 	void createMedialSurface(medialSurface*& srf, inputDataNE& cfg, size_t startValue);
@@ -44,6 +60,8 @@ class blockNetwork
 
 
 
+	static int SideImax;
+	static int nBP6; // 1+SideImax
 
 public:
 

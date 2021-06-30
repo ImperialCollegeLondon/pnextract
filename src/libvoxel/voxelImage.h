@@ -5,7 +5,7 @@ developed by Ali Qaseminejad Raeini for handelling 3D raw images.
 
 
 Please see our website for relavant literature making use of this code:
-http://www3.imperial.ac.uk/earthscienceandengineering/research/perm/porescalemodelling
+https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/
 
 For further information please contact us by email:
 Ali Q Raeini: a.q.raeini@imperial.ac.uk
@@ -31,6 +31,9 @@ Ali Q Raeini: a.q.raeini@imperial.ac.uk
 
 
 #include "typses.h"
+#ifdef _STOR_PUB
+#include "SiR.h" //_STOR 
+#endif //_STOR_PUB 
 
 //! suffix,  set/get default suffix, uses static storage.
 inline const std::string& imgExt(const std::string& defSuffix="")
@@ -50,7 +53,7 @@ inline const std::string& imgExt(const std::string& defSuffix="")
 		if(defSuffix[0]!='.') defSuffix_="."+defSuffix;
 		else                  defSuffix_=defSuffix;
 		if( defSuffix_!=".tif" && defSuffix_!=".raw.gz" && defSuffix_!=".am" &&
-		    defSuffix_!=".raw" && defSuffix_!=".dat" && defSuffix_!=".txt" )
+		    defSuffix_!=".raw" && defSuffix_!=".dat" && defSuffix_!=".txt")
 			std::cout<<"\nError: wrong default image format: "<<defSuffix_<<"\n"<<std::endl;
 	}
 
@@ -62,15 +65,18 @@ template<typename T>
 using intOr = typename std::conditional<(sizeof(T) > sizeof(short)),T,int>::type;
 #define Tint  intOr<T>
 
-
+extern int maxNz;
 
 template <typename T> class voxelField  //! 3D voxel data, on Cartesian uniform grids, with efficient access functions, and I/O into  .tif, .raw.gz .am, .raw, .dat file formats.
 {
  protected:
  public:
+
 	long long nij_;
 	int3  nnn_;
 	std::vector<T> data_;
+	
+
 	voxelField(): nij_(0), nnn_(0,0,0) {};
 	voxelField(int3 n) {  reset(n);  };
 	voxelField(int3 n, T value) {  reset(n, value);  };
@@ -82,7 +88,6 @@ template <typename T> class voxelField  //! 3D voxel data, on Cartesian uniform 
 	void reset(int3 n, T value);
 	void reset(int n1, int n2, int n3, T value) {  reset(int3(n1,n2,n3), value);  };
 	void readMicroCT(std::string);
-	void readMicroCTHeader(std::ifstream);
 	bool readAscii(std::string);
 	void readAscii(std::ifstream& in);
 	bool readBin(std::string fileName, int nSkipBytes=0);
@@ -136,6 +141,7 @@ template <typename T> class voxelField  //! 3D voxel data, on Cartesian uniform 
 	int nx() const   {  return nnn_.x;  };
 	int ny() const   {  return nnn_.y;  };
 	int nz() const   {  return nnn_.z;  };
+	long long  nxy() const   {  return nij_;  };
 	void getSize(int& n1, int& n2, int& n3) const;
 	virtual ~voxelField() {};
 
@@ -146,15 +152,11 @@ template <typename T> class voxelField  //! 3D voxel data, on Cartesian uniform 
 
 class voxelImageTBase //! Base class handling different image files with different data types (float, char, int...)
 {
-public:
+ public:
 	virtual ~voxelImageTBase() {};
 	virtual void write(std::string fileName) const = 0;
 	virtual void printInfo() const {};
-	//virtual int getInt(int i, int j, int k) const = 0;
-	//virtual int getInt(size_t iii) const = 0;
-	//virtual double getDbl(int i, int j, int k) const = 0;
-	//virtual double getDbl(size_t iii) const = 0;
-	//virtual double vv_mp5(double i, double j, double k) const = 0;
+	virtual std::unique_ptr<voxelImageTBase> copy() const = 0;
 	virtual const int3& size3() const = 0;
 	virtual const dbl3& dx() const = 0;
 	virtual const dbl3& X0() const = 0;
@@ -163,17 +165,18 @@ public:
 
 
 template <typename T>
-class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image data with different data types (float, char, int...)
+class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image data of different types (T = float, char, int...)
 {
-	dbl3	X0_, dx_;
+	dbl3	X0_;   //!< origin
+	dbl3	dx_;   //!< voxel size
 
  public:
+	//string bname_; //!< base name, optional
 
 	voxelImageT():X0_(0.,0.,0.),dx_(1,1,1) {};
 
-
-	voxelImageT(int n1, int n2, int n3, T value)
-	: voxelField<T>( n1,  n2,  n3,  value),  X0_(0.,0.,0.), dx_(1,1,1) {}
+	//voxelImageT(int n1, int n2, int n3, T value)
+	//: voxelField<T>( n1,  n2,  n3,  value),  X0_(0.,0.,0.), dx_(1,1,1) {}
 
 
 	voxelImageT(int3 n, dbl3 dx, dbl3 xmin, T value)
@@ -185,15 +188,14 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image 
 
 
 	voxelImageT(const std::string& headerName, int processKeys=1, std::string fileName="")
-	: X0_(0.,0.,0.),dx_(1,1,1)  {readFromHeader(headerName, processKeys,fileName);}
+	:	X0_(0.,0.,0.),dx_(1,1,1)  { readFromHeader(headerName, processKeys,fileName); }
+
 	void readFromHeader(const std::string& headerName, int processKeys=1, std::string fileName="")
 	{	if (!headerName.empty() && headerName!="NO_READ")
-		{	std::cout<<"Openning header: "<<headerName<<std::endl;
-			std::ifstream headerFile(headerName.c_str());
-			if(!headerFile)  {std::cout<<"\n\n  Error: cannot open header file, "<<headerName<<std::endl<<std::endl; }
-			else
-				readFromHeader(headerFile,headerName,processKeys,fileName);
-			headerFile.close();
+		{	std::cout<<"  Openning header: "<<headerName<<std::endl;
+			std::ifstream hdr(headerName);
+			if(hdr) this->readFromHeader(hdr,headerName,processKeys,fileName);
+			else  alert("cannot open header file, "+headerName); 
 		}
 	}
 
@@ -202,10 +204,13 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image 
 
 
 	bool readAscii(std::string fileName);
-	void  readRLE(std::string fileName);
+	void readRLE(std::string fileName);
 
-	void cropD( int3 frm,  int3 to,int emptylyrs=0, T eLyrsValue=1, bool verbose=true) ;
-	void cropOld( int cropBgn[3],  int cropEnd[3],int emptylyrs=0, T eLyrsValue=1) ;
+	std::unique_ptr<voxelImageTBase> copy() const { return std::make_unique<voxelImageT<T>>(*this); };
+
+
+	void cropD( int3 frm,  int3 to,int emptylyrs=0, T eLyrsValue=1, bool verbose=false) ;
+	void cropOld(int cropBgn[3],  int cropEnd[3],int emptylyrs=0, T eLyrsValue=1) ;
 	void cropOld(int iBgn, int iEnd, int jBgn, int jEnd, int kBgn, int kEnd, int emptylyrs=0,T eLyrsValue=1);
 
 	void writeHeader(std::string fileName) const;
@@ -216,7 +221,7 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image 
 	void erodeLayer(int i);
 	void rotate(char direction);
 	void PointMedian032(int nAdj0, int nAdj1, T lbl0, T lbl1);
-	unsigned long long  FaceMedian06(int nTresh0,int nTresh1);
+	size_t FaceMedian06(int nAdj0,int nAdj1); // obsolete
 	void mode(short nNeist, bool verbose=false);
 	void zeroGrad(int nlyr);
 
@@ -253,27 +258,87 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image 
 	dbl3&       dxCh()        { return dx_; };
 	const int3& size3() const { return voxelField<T>::size3(); };
 
-	double vv_mp5(double i, double j, double k) const /// set i,j,k -=0.5 before passing them here
+	double vv_mp5(double i, double j, double k) const /// set i,j,k -=0.5 (=_mp5) before passing them here, assuming vxl centres are at +0.5
 	{
-		const int i0=i-1e-12, j0=j-1e-12, k0=k-1e-12; ///. note neg fracs round to zero
-		double dd=i-i0,    Imd=1.0-dd;
+		const int i0=std::min(int(i),this->nx()-2), j0=std::min(int(j),this->ny()-2), k0=std::min(int(k),this->nz()-2); ///. note neg fracs round to zero
+		double dd=i-i0,    ld=1.-dd;
 		const T* 
-		vp=&(*this)(i0,j0,k0);   const double v00=*vp*(Imd) + this->v_i(1,vp)*(dd);
-		vp=this->p_j(1,vp);      const double v10=*vp*(Imd) + this->v_i(1,vp)*(dd);
-		vp=this->p_k(1,vp);      const double v11=*vp*(Imd) + this->v_i(1,vp)*(dd);
-		vp=&(*this)(i0,j0,k0+1); const double v01=*vp*(Imd) + this->v_i(1,vp)*(dd);
-		dd=j-j0;    Imd=1.0-dd;
-		return ( v00*Imd+v10*dd )*(1.0-(k-k0))  + ( v01*Imd+v11*dd )*(k-k0);
+		vp=&(*this)(i0,j0,k0);   const double v00= *vp*ld + dd*this->v_i(1,vp);
+		vp=this->p_j(1,vp);      const double v10= *vp*ld + dd*this->v_i(1,vp);
+		vp=this->p_k(1,vp);      const double v11= *vp*ld + dd*this->v_i(1,vp);
+		vp=&(*this)(i0,j0,k0+1); const double v01= *vp*ld + dd*this->v_i(1,vp);
+		dd=j-j0;    ld=1.-dd;
+		return (v00*ld + dd*v10) * (1.-(k-k0))  + (k-k0) * (v01*ld + dd*v11);
 	};
+};
 
- };
+
+std::string VxlKeysHelp(std::string keyname="", std::string subkey="");
 
 
-using dft = unsigned char;  //! default image format
-typedef voxelImageT<dft> voxelImage;   //! default image format
+template<class InpT, typename T> int vxlProcess(const InpT& inks, voxelImageT<T>& img, std::string nam="");// InpT= string or InputFile
+
+template<class InpT, typename First=uint8_t, typename... Rest> int vxlProcess(const InpT& inks, voxelImageTBase* ptr, std::string nam="");
+
+
+std::unique_ptr<voxelImageTBase> readImage(std::string hdrNam /*headername or image type*/, int procesKeys = 1 );
+
+template<class T, typename First=uint8_t, typename... Rest>
+int resetFromImageT(voxelImageT<T>& vImg, voxelImageTBase* imgPtr) { //! cast to specified vImg type 
+	if(auto img = dynamic_cast<voxelImageT<First>*>(imgPtr)) { vImg.resetFrom(*img); return 0; }
+	else if(sizeof...(Rest)) return resetFromImageT<T,Rest...>(vImg, imgPtr);
+	alert("Unknown image type in resetFromImageT");
+	return -1;
+}
+
+template<typename T>
+void readConvertFromHeader( voxelImageT<T>& vImg, std::string hdrNam, int procesKeys=1)  { //! read image and if needed convert its type
+	std::unique_ptr<voxelImageTBase> vImgUptr = readImage(hdrNam,procesKeys);
+	voxelImageTBase* imgPtr = vImgUptr.get();
+	if  (auto img = dynamic_cast<voxelImageT<T>*>(imgPtr)) { vImg = std::move(*img); } //TODO ensure use swap
+	else  ensure(  resetFromImageT(vImg, imgPtr)==0, "can not convert image", -1);
+}
+
+template<class T> voxelImageT<T>* vxlCast(voxelImageTBase* imgPtr) { return dynamic_cast<voxelImageT<T>*>(imgPtr); }
+
+template<typename T>
+voxelImageT<T> copyOrReadImgT(std::string hdrNam) {
+	#ifdef _STOR_PUB 
+	if (void* ptr = dbget(_STOR,hdrNam,0)) {
+		auto imgPtr = vxlCast<T>(static_cast<voxelImageTBase*>(ptr)); ensure(imgPtr, "wrong image type", -1);
+		return *imgPtr;
+	}
+	else
+	#endif
+		return  voxelImageT<T>(hdrNam);
+
+
+//template<typename ImgT>
+//std::unique_ptr<ImgT, std::function<void(ImgT*)> getOrReadImgT(std::string hdrNam) {
+	//#ifdef _STOR_PUB 
+	//if (void* ptr = dbget(_STOR,hdrNam,0)) {
+		//auto imgPtr = vxlCast<T>(static_cast<voxelImageTBase*>(ptr)); ensure(imgPtr, "wrong image type", -1);
+		//return std::unique_ptr<vxlT, std::function<void(vxlT*)>(imgPtr,[](vxlT* ptr){});
+	//}
+	//else
+	//#endif
+		//return  std::unique_ptr<vxlT, std::function<void(vxlT*)>(new ImgT(hdrNam),[](vxlT* ptr){ delete ptr; });
+//}
+}
+
+#ifdef _STOR_PUB 
+	#define _dbgetOrReadImgT(_img,_hdrNam)  \
+			voxelImageT<T>* _imgPtr;   std::unique_ptr<voxelImageTBase> _imgRead;  \
+			if (void* ptr = dbget(_STOR,_hdrNam,0)) { _imgPtr = vxlCast<T>(static_cast<voxelImageTBase*>(ptr)); }  \
+			else       { _imgRead = readImage(_hdrNam,1); _imgPtr=vxlCast<T>(_imgRead.get()); }  \
+			ensure(_imgPtr, "wrong image type", -1);  \
+			const voxelImageT<T>& _img = *_imgPtr;
+#else
+	#define _dbgetOrReadImgT(_img,_hdrNam) voxelImageT<T> _img(_hdrNam)
+#endif
+
+typedef voxelImageT<unsigned char> voxelImage;   //! default image format
 
 #include "voxelImageI.h"
-#include "voxelImageReader.h"
-
 
 #endif

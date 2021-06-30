@@ -4,12 +4,15 @@ msCXX ?= g++
 
 
 
-# Note: add -std=c++11 manually if you set msCFLAGS
-ifdef USE_CPP17
- msCXX = g++-7
- msCFLAGS += -std=c++17 -MMD -MP 
+
+ifdef USE_CC
+# msCFLAGS += -MMD -MP
 else
- msCFLAGS += -std=c++11 -MMD -MP
+#ifdef USE_CPP17
+ msCFLAGS += -std=c++17 -MMD -MP  -Wall
+ msLFLAGS += -lstdc++fs
+#else
+# msCFLAGS += -std=c++11 -MMD -MP
 endif
 
 # $(info msCFLAGS set to ${msCFLAGS})
@@ -128,8 +131,8 @@ endif
 ifdef USE_ZLIB
  ZLIBDIR?=${msRoot}
  ifneq ("$(wildcard ${ZLIBDIR}/include/zlib.h)","")
-   msCFLAGS += -I$ ${ZLIBDIR}/include -DZLIB
-   msLFLAGS += -L$ ${ZLIBDIR}/lib -lz
+   msCFLAGS += -I${ZLIBDIR}/include -DZLIB
+   msLFLAGS += -L${ZLIBDIR}/lib -lz
  else
    $(info $(InDir) ZLIBDIR, ${ms3rd}/zlib/zlib.h, not found, ignoring USE_ZLIB)
  endif
@@ -193,12 +196,19 @@ endif
 
 ifneq "${OPT}" ".exe"
  # set openMP for parallel image processing, mesh generation ... 
- # not yet integrated with the "released" codes due to portability concerns / too experimental 
+ # not yet fully integrated with the "released" codes due to portability concerns / too experimental 
  ifdef USE_OMP 
   msCFLAGS += -DOpenMP $(mpic++ -showme:compile) -fopenmp
   msLFLAGS += $(mpic++ -showme:link)  -fopenmp
  endif
+else
+ msLFLAGS += -static -lstdc++ -lm   -lstdc++fs
+ ifdef USE_OMP 
+  msCFLAGS += -DOpenMP -fopenmp
+  msLFLAGS += -fopenmp
+ endif
 endif
+
 
 ifeq ($(USE_XDMF),1)
    msCFLAGS += -I${msSrc}/Xdmf -DXDMF  
@@ -303,25 +313,26 @@ endif
 
 ##########################################single-source .cpp app:
 ifdef USE_SINGLECPP
-$(warning  Building single-source apps)
-cpp2d := $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.d))))
-cpp2o := $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.o))))
-o2cpp = $(subst ${msBuildDir}/,,$(subst __,/,$(subst ++,..,$(subst .o,.cpp,$@))))
+ $(info  Single-source apps)
+ cpp2d := $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.d))))
+ cpp2o = $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(@:.cpp=.o))))
+ cps2o := $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.o))))
+ o2cpp = $(subst ${msBuildDir}/,$(CURDIR)/,$(subst __,/,$(subst ++,..,$(subst .o,.cpp,$@))))
 
-$(cpp2o): $(o2cpp)
-	@echo  Compiling  $(o2cpp) '>>' $@
-	@${msCXX} ${msCFLAGS} -c $(o2cpp)   -o $@
+${msBuildDir}/%.o: $(o2cpp)
+	@echo  'Compiling $(o2cpp) *'
+	${msCXX} ${msCFLAGS} -c $(o2cpp)   -o $@
 
-$(apps): psAppDirs $(cpp2o) 
-	@echo  Building  $(cpp2o) '>>' $@
-	@${msCXX} $(cpp2o)  -o $(msBinDir)/$@ ${msLFLAGS}
- 
+$(srcs): psAppDirs $(cps2o) 
+	@echo  Building  $(cpp2o) '>> ' $(@:.cpp=)
+	@${msCXX} $(cpp2o)  -o $(msBinDir)/$(@:.cpp=)${OPT} ${msLFLAGS}
+
 -include $(cpp2d)
 
 .PHONY:  clean $(cpp2d)
 
 clean:
-	$(RM) $(cpp2o) $(cpp2d)
+	$(RM) $(cps2o) $(cpp2d)
 endif
 
 
@@ -331,8 +342,8 @@ ifdef USE_msCMAKE
 msCApp:
 	mkdir -p  ${msBuildDir}
 	(cd       ${msBuildDir} &&  cmake $(msCMAKFLAGS) -DmsSrc=${msSrc} $(makFilDir))
-	(cd       ${msBuildDir} &&  make VERBOSE=1 )
-	cp ${msBuildDir}/${exec} $(msBinDir)
+	(cd       ${msBuildDir} &&  make VERBOSE=1) || echo errors occurred but continuing
+	cp ${msBuildDir}/${exec} $(msBinDir)        || echo Warning:  cannot copy ${msBuildDir}/${exec}, but continuing
 else
   msCApp: ; $(error msCApp target should be used togather with USE_msCMAKE=1, $^)
 endif
@@ -393,7 +404,7 @@ ${msBuildDir}/%.o: $(o2cpp)
 	@${msCXX}  ${msCFLAGS}  ${EXTRACFLAGS} -c $(o2cpp) -o $@
 
 # this is a note only, for how to use nmake in Windows, will not work with complex makefiles
-# "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64_x86\vcvarsamd64_x86.bat"
+# "c:\Program Files (x86)\Microsoft Visual Studio 12.\VC\bin\amd64_x86\vcvarsamd64_x86.bat"
 # nmake
 winVS:
 	@cl -I..\libf2c /nologo /MT /EHsc /Ox  ${srcs} ..\..\bin\vcf2c.lib  /link -LARGEADDRESSAWARE /out:..\bin\gnflow_VS.exe
@@ -410,28 +421,28 @@ endif
 
 #################### run tests ####################.
 ifdef USE_msTEST
-  # t_ is needed to stop make from confusing input and targets (which have the same name here)
-  tst2test := $(addprefix t_${msTestDir}/,$(subst /,__,$(subst ..,++,$(tsts))))
-  test2tst = $(subst t_${msTestDir}/,,$(subst __,/,$(subst ++,..,$@)))
+  # t_ is making targets .PHONY (re-run anyway)
+  tst2test := $(addprefix T${msTestDir}/,$(subst /,__,$(subst ..,++,$(tsts))))
+  test2tst = $(subst T${msTestDir}/,,$(subst __,/,$(subst ++,..,$@)))
   inp2app = $(lastword $(subst _, ,$(subst .sin,,$@)))
 
-t_${msTestDir}/%.mhd: $(test2tst)
+T${msTestDir}/%.mhd: $(test2tst)
 	cp $(test2tst) ${msTestDir}/
 
-t_${msTestDir}/%.sin: $(test2tst)
+T${msTestDir}/%.sin: $(test2tst)
 	@echo detecting app from *_app.sin=="$@": $(inp2app)
 	$(msSrc)/script/testApp "${msTestDir}"  $(inp2app) "${CURDIR}/$(test2tst)"  "${msRoot}"
 
-t_${msTestDir}/%.py: $(test2tst)
+T${msTestDir}/%.py: $(test2tst)
 	echo python3 "${CURDIR}/$(test2tst)"
 	$(msSrc)/script/testApp "${msTestDir}"  python3 "${CURDIR}/$(test2tst)"
 
-t_${msTestDir}/%.cpp: $(test2tst)
+T${msTestDir}/%.cpp: $(test2tst)
 	echo ${msCXX}
 	${msCXX} -std=c++11 $(test2tst) -o $@
 	$(msSrc)/script/testApp "${msTestDir}"  "${CURDIR}/$@" "${CURDIR}/$(test2tst)"
 
-t_${msTestDir}/%.sh:
+T${msTestDir}/%.sh:
 	$(msSrc)/script/testApp "${msTestDir}" "${CURDIR}/$(test2tst)"
 #	(cd ${msTestDir} && $(test2tst))
 

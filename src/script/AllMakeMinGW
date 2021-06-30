@@ -49,17 +49,14 @@ for cas in $cases ; do
 done
 
 
-echo "Note: run ./AllClean before running this script, when switching between Linux and Win"
+echo "Note: run `make distclean` before running this script, when switching between Linux and Win"
 
 
 echo "bin directory: $msBinDir"
 if ! [ -n "$SetedmsSrc" ]; then
-	echo " ";	echo " ";
-	echo " variable msSrc is not permanently set"
-	echo " please set in your ~/.bashrc file by adding new line:"
-	echo "source $msSrc/bashrc"
-	echo " ";
+	printf "\n\n To install permanently, add the following line to your ~/.bashrc file:\n"
+	printf "source $msSrc/bashrc\n\n"
 fi
 
-# check pnflow codes
+printf "check pnflow dependency:\nx86_64-w64-mingw32-objdump -p  $msBinDir/pnflow.exe    | grep 'DLL Name:'\n"
 x86_64-w64-mingw32-objdump -p  $msBinDir/pnflow.exe    | grep 'DLL Name:'

@@ -5,18 +5,33 @@
 #include <iostream>
 #include <unordered_map>
 
-
+// see performance.cpp for high resolution clock
 
 struct Timer
 {
-	Timer() : elapsed(0.0) {}
-
+	Timer() : elapsed(0.) {}
 	void  tic() { clock_=clock(); }
 	void  toc() { elapsed += double(clock()-clock_)/double(CLOCKS_PER_SEC); }
-
-	clock_t                        clock_;
-	double                         elapsed;
+	clock_t     clock_;
+	double      elapsed;
 };
+
+class Watch
+{
+	double&      elapsed_;
+	clock_t     clock_;
+ public:
+	Watch(double& elapsed) : elapsed_(elapsed), clock_(clock()) {}
+	~Watch() { elapsed_ += double(clock()-clock_)/double(CLOCKS_PER_SEC); }
+};
+
+//struct TimeScope
+//{
+	//TimeScope(double& elapsed) : passed_(elapsed), clock_(clock()) {}
+	//~TimeScope() { elapsed += double(clock()-clock_)/double(CLOCKS_PER_SEC); }
+	//clock_t  clock_;
+	//double&  elapsed;
+//};
 
 #ifdef _PROFILE_
 #define _tic_  timer.tic();
@@ -36,6 +51,8 @@ struct Timer
 
 inline double elapsedTime(clock_t start){  return (double(clock()-start)/CLOCKS_PER_SEC);  }
 
+// used in network extraction code
+
 class Timing
 {
  public:
@@ -52,7 +69,7 @@ class Timing
 	void operator()(const std::string& cs)
 	{
 		if(task_.size())
-		  times.insert({task_,0.0}).first->second += elapsedTime(clock_); 
+		  times.insert({task_,0.}).first->second += elapsedTime(clock_); 
 		clock_ = clock();
 		task_ = cs;
 	}

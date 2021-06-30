@@ -41,4 +41,4 @@ done
 rm -f  bin/*.d # in case
 rm -f  log log.*
 rm -rf build/*
-rm -f $(find . | grep -F /Make/linux64)
+rm -rf $(find . | grep -F /Make/linux64)

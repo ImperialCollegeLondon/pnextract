@@ -40,8 +40,8 @@ ElementDataFile = Image.raw.gz
 //! be ignored. 
 
 
-//! DNS/PNM codes can read .tif, .raw.gz, .raw and .txt/.dat files. The 
-//! format is detected from image suffix, given by the ElementDataFile keyword.
+//! DNS/PNM codes can read .am, .tif, .raw.gz, .raw and .txt/.dat files. 
+//! The format is detected from the image suffix in ElementDataFile keyword.
 
 //! When the image format is .raw or .raw.gz, this file can be opened in 
 //! ImageJ/Fiji or Paraview to load the image.  For tif images, you should

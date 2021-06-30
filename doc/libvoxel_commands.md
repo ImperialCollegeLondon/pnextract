@@ -242,3 +242,8 @@ The following keywords fate in further libvoxel versions shall be reviewed
  
 		maskWriteFraction  "maskname.mhd"  "outName.txt"   0    2  1000000
 
+
+**keepLargest0**:    
+    Keeps the largest connected region with value of 0, sets the rest to maxT-1 (=254 for 8bit images). 
+    Use this to compute effective porosity.
+

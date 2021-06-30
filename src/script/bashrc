@@ -30,6 +30,7 @@ else
 	if ! [ -d $msLibDir ]; then  mkdir -p $msLibDir;   fi
 	if ! [ -d $msIncDir ]; then  mkdir -p $msIncDir;   fi
 
+	export PYTHONPATH=$msSrc/script:$msSrc/pylib:$PYTHONPATH
 
 fi
 
