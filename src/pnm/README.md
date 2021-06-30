@@ -13,13 +13,13 @@ pores and throats, published in [Bultreys et al. 2018].
 
 ----------------------------------------
 
-***Note this repository is same as [pnflow repository](https://github.com/aliraeini/pnflow) but without the pnflow code.***
+Note: this repository is same as [pnflow repository](https://github.com/aliraeini/pnflow) but without the pnflow code.
 
 ----------------------------------------
 
-### Instructions for Windows:
+### Instructions for MS Windows
 
-A sample input file, [Image.mhd](doc/Image.mhd), is provided in the [doc](../doc/) folder, in ascii 
+A sample input file, [Image.mhd](../../doc/Image.mhd), is provided in the [doc](../../doc/) folder, in ascii 
 (text) format. Please use this file together with a 8-bit micro-CT 
 image, similar to the [Images on our website].
 
@@ -30,8 +30,8 @@ and run, in a Windows Command Prompt:
 
 * Replace `PATH\TO\bin\`` with the full path to the pnextract.exe, if it exists in a different directory than your command prompt working directory.
 
-* To open a command-prompt in Windows, hold the *Shift* key and *right-click*
-  into the folder where the input_pnflow.dat is copied and click the *Open Command Window Here* menu.
+* To open a command-prompt in Windows, hold the `Shift` key and `right-click`
+  into the folder where the input_pnflow.dat is copied and click the `Open Command Window Here` menu.
 
 
 The instructions are similar in Linux. Additionally, you can source the src/script/bashrc file to set the paths to the compiled binaries:     
@@ -40,22 +40,19 @@ The instructions are similar in Linux. Additionally, you can source the src/scri
 
 See the [pnextract wiki](https://github.com/aliraeini/pnextract/wiki/pnextract-FAQ) for more details.
 
-###  Build instructions:
+###  Build instructions
 
 The code is already compiled to pnextract.exe, a Win64 executable, using Gcc MinGW compilers and compressed into the file bin.7z.
 
-See the [src/script/README.md](../src/script/README.md) for build instructions.
+See [../script/README.md](../script/README.md) for build instructions.
 
-###  Dependencies
-The included voxelImage library  is the main prerequisite. 
-voxelImage itself can optionally be linked to [libz] and [libtiff] to support
-reading .raw.gz and 3D .tif files. 
-Stripped down versions of both of these libraries are provided in the 
-thirdparty directory for compatibility and ease of compilation.
+
+The included [libvoxel](../libvoxel)  is the main dependancy, which itself is (optionally) linked to the included 
+[zlib](../../thirdparty/zlib) and [libtiff](../../thirdparty/libtiff) libraries.
 
 ###  Licence
 
-The code is release as a free, using a zlib-style licence (TODO)
+The code is release as a free, using a zlib-style licence (TODO).     
 The code and executables are provided as is, without any kind of warranty;
 use at your own risk.
 
