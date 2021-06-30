@@ -2,13 +2,13 @@
 
 The following are commands will be processed by libvoxel when reading images.  They shall be given in after  ElementDataFile keyword in the .mhd files to avoid incompatibility with Fiji-is-ImageJ and Paraview.  Furthermore, any additional application specific keywords shall be provided after these since libvoxel stops processing the commands once it encounters any unrecognised keyword (i.e. other than comments and keywords below).  
 
-The list of supported commands by libvxel can be obtained from voxelImageConvert app by running:    
+The list of supported commands by libvxel can be obtained from voxelImageProcess app by running:    
 
-		voxelImageConvert ?
+		voxelImageProcess ?
 
-For some commands, its usage is shown by running:
+Specific commands usage can be shown by running:
 
-		voxelImageConvert ? command
+		voxelImageProcess ? commandmmand
 
 
 Note these are in additional to the mhd header data provided in the top of .mhd files:
