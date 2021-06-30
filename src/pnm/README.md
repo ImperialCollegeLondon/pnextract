@@ -13,7 +13,7 @@ pores and throats, published in [Bultreys et al. 2018].
 
 ----------------------------------------
 
-Note: this repository is same as [pnflow repository](https://github.com/aliraeini/pnflow) but without the pnflow code.
+Note: this is same as [pnflow repository](https://github.com/aliraeini/pnflow) but without the pnflow code.
 
 ----------------------------------------
 
@@ -42,21 +42,22 @@ See the [pnextract wiki](https://github.com/aliraeini/pnextract/wiki/pnextract-F
 
 ###  Build instructions
 
-The code is already compiled to pnextract.exe, a Win64 executable, using Gcc MinGW compilers and compressed into the file bin.7z.
+Download and extract [bin.7z](../../bin.7z) for pnextract.exe, 
+a Win64 executable compiled using MinGW compilers.  
 
-See [../script/README.md](../script/README.md) for build instructions.
-
-
+See [../script/README.md](../script/README.md) for build instructions. 
 The included [libvoxel](../libvoxel)  is the main dependancy, which itself is (optionally) linked to the included 
 [zlib](../../thirdparty/zlib) and [libtiff](../../thirdparty/libtiff) libraries.
 
+
 ###  Licence
 
-The code is release as a free, using a zlib-style licence (TODO).     
+The code is release as a free, using a zlib-style licence.     
 The code and executables are provided as is, without any kind of warranty;
 use at your own risk.
 
-For contact and further information see [Imperial College - Pore-scale Consortium] website, raise an `issue` on github,
+For contact and further information see [Imperial College - Pore-scale Consortium] website,
+raise an `issue` on github mentioning @aliraeini in your message,
 or send me an email:   a.q.raeini@imperial.ac.uk
 
 
@@ -71,9 +72,8 @@ https://doi.org/10.1103/PhysRevE.96.013312
 T Bultreys, Q Lin, Y Gao, A Q Raeini, A AlRatrout, B Bijeljic, and M J Blunt . "Validation of model predictions of pore-scale fluid distributions during two-phase flow", Phys. Rev. E 97, 053104 (2018) 
 https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 
-
-[Images on our website]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/micro-ct-images-and-networks/
 [Imperial College - Pore-scale Consortium]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling
+[Images on our website]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/micro-ct-images-and-networks/
 [Bultreys et al. 2018]: https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 [Raeini, Bijeljic and Blunt 2017]: https://doi.org/10.1103/PhysRevE.96.013312
 [Dong and Blunt, 2009]: https://doi.org/10.1103/PhysRevE.80.036307

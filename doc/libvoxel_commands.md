@@ -6,7 +6,7 @@ The list of supported commands by libvxel can be obtained from voxelImageProcess
 
 		voxelImageProcess ?
 
-For some commands, its usage is shown by running:
+Specific commands' usage can be shown by running:
 
 		voxelImageProcess ? command
 
