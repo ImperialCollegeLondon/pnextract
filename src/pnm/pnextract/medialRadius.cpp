@@ -296,7 +296,7 @@ void medialSurface::smoothRadius()  {
 		  segment& seg=s.s[ix];
 		  for (int i = seg.start; i < s.s[ix+1].start; ++i)  {
 			 double sumR=0.; int counter=0;
-			for (int kk = max(k-1,0); kk<min(k+2,nz); ++kk)
+		    for (int kk = max(k-1,0); kk<min(k+2,nz); ++kk)
 		      for (int jj = max(j-1,0); jj<min(j+2,ny); ++jj)  {
 					int ii = max(i-1,0);
 					const segment* segbc=cg_.segptr(ii,jj,kk);
@@ -333,7 +333,7 @@ void medialSurface::smoothRadius()  {
 			 double sumDelR=0.; int counter=0;
 		    for (int kk = max(k-1,0); kk<min(k+2,nz); ++kk)
 		    for (int jj = max(j-1,0); jj<min(j+2,ny); ++jj)  {
-				int ii = max(i-1,0);
+				int ii = max(i-1, 0);
 				const segment* segbc=cg_.segptr(ii,jj,kk);
 				if (segbc->value != 0 && (segbc+1)->value == 0)		{++segbc; ii=segbc->start;}
 				if (segbc->value == 0)  {

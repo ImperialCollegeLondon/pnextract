@@ -160,7 +160,7 @@ class voxelImageTBase //! Base class handling different image files with differe
 	virtual const int3& size3() const = 0;
 	virtual const dbl3& dx() const = 0;
 	virtual const dbl3& X0() const = 0;
-	virtual void readFromHeader(std::istream& headerFile, const std::string& headerName, int processKeys, std::string fileName) = 0;
+	virtual void readFromHeader(std::istream& headerFile, const std::string& headerName, int processKeys) = 0;
 };
 
 
@@ -175,11 +175,7 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image 
 
 	voxelImageT():X0_(0.,0.,0.),dx_(1,1,1) {};
 
-	//voxelImageT(int n1, int n2, int n3, T value)
-	//: voxelField<T>( n1,  n2,  n3,  value),  X0_(0.,0.,0.), dx_(1,1,1) {}
-
-
-	voxelImageT(int3 n, dbl3 dx, dbl3 xmin, T value)
+	voxelImageT(int3 n, dbl3 dx=dbl3(1.,1.,1.), dbl3 xmin=dbl3(0.,0.,0.), T value=0)
 	: voxelField<T>( n.x,  n.y,  n.z,  value), X0_(xmin),dx_(dx) {}
 
 	voxelImageT(const voxelImageT & vm)
@@ -187,19 +183,19 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image 
 
 
 
-	voxelImageT(const std::string& headerName, int processKeys=1, std::string fileName="")
-	:	X0_(0.,0.,0.),dx_(1,1,1)  { readFromHeader(headerName, processKeys,fileName); }
+	voxelImageT(const std::string& headerName, int processKeys=1)
+	:	X0_(0.,0.,0.),dx_(1,1,1)  { readFromHeader(headerName, processKeys); }
 
-	void readFromHeader(const std::string& headerName, int processKeys=1, std::string fileName="")
+	void readFromHeader(const std::string& headerName, int processKeys=1)
 	{	if (!headerName.empty() && headerName!="NO_READ")
 		{	std::cout<<"  Openning header: "<<headerName<<std::endl;
 			std::ifstream hdr(headerName);
-			if(hdr) this->readFromHeader(hdr,headerName,processKeys,fileName);
+			if(hdr) this->readFromHeader(hdr,headerName,processKeys);
 			else  alert("cannot open header file, "+headerName); 
 		}
 	}
 
-	void readFromHeader(std::istream& headerFile, const std::string& headerName, int processKeys=1, std::string fileName="");
+	void readFromHeader(std::istream& headerFile, const std::string& headerName, int processKeys=1);
 
 
 
@@ -258,17 +254,17 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image 
 	dbl3&       dxCh()        { return dx_; };
 	const int3& size3() const { return voxelField<T>::size3(); };
 
-	double vv_mp5(double i, double j, double k) const /// set i,j,k -=0.5 (=_mp5) before passing them here, assuming vxl centres are at +0.5
-	{
+	double vv_mp5(double i, double j, double k) const { /// linear interpolation
+		///set i,j,k -=0.5 (=_mp5) before passing them here, assuming vxl centres are at +0.5
 		const int i0=std::min(int(i),this->nx()-2), j0=std::min(int(j),this->ny()-2), k0=std::min(int(k),this->nz()-2); ///. note neg fracs round to zero
 		double dd=i-i0,    ld=1.-dd;
 		const T* 
-		vp=&(*this)(i0,j0,k0);   const double v00= *vp*ld + dd*this->v_i(1,vp);
-		vp=this->p_j(1,vp);      const double v10= *vp*ld + dd*this->v_i(1,vp);
-		vp=this->p_k(1,vp);      const double v11= *vp*ld + dd*this->v_i(1,vp);
-		vp=&(*this)(i0,j0,k0+1); const double v01= *vp*ld + dd*this->v_i(1,vp);
-		dd=j-j0;    ld=1.-dd;
-		return (v00*ld + dd*v10) * (1.-(k-k0))  + (k-k0) * (v01*ld + dd*v11);
+		vp=&(*this)(i0,j0,k0);  const double v00= *vp*ld + dd*this->v_i(1,vp);
+		vp=this->p_j( 1,vp);    const double v10= *vp*ld + dd*this->v_i(1,vp);
+		vp=this->p_k( 1,vp);    const double v11= *vp*ld + dd*this->v_i(1,vp);
+		vp=this->p_j(-1,vp);    const double v01= *vp*ld + dd*this->v_i(1,vp);
+		dd=j-j0;    ld=1.-dd;       k-=k0;
+		return (v00*ld + dd*v10) *(1.-k)+k* (v01*ld + dd*v11);
 	};
 };
 

@@ -28,7 +28,7 @@ mgw: checkRoot
 	mkdir -p include
 	(cd ${ms3rd} && $(MAKE) -f ${msSrc}/script/makefile.3rd  OPT=.exe)
 	(cd ${msSrc} && $(MAKE) -f ${msSrc}/script/Makefile.in recurseMake  OPT=.exe USE_msRecurse=1)
-	(cd bin && make -f ${msSrc}/script/Makefile.msRoot  checksum)
+	(cd bin && make -f ${msSrc}/script/Makefile.msRoot  checksum) || echo check checksum
 
 
 clean: checkRoot

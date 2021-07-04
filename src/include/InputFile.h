@@ -23,8 +23,8 @@
 
 
 
-template<class T>  using  stvecs = std::vector<std::vector<T>>;
 template<class T>  using  stvec    = std::vector<T>;
+template<class T>  using  stvecs = std::vector<std::vector<T>>;
 using  ststr    = std::string;
 using  isstr    = std::istringstream;
 
@@ -37,15 +37,14 @@ inline bool readBoolOr(std::string st, std::istream& in) { in>>st; return st[0]=
 #define for_i(_vector_m_)  for(size_t i=0; i<_vector_m_.size(); ++i)
 #endif
 
-class InputFile //! InputFile is a general input file reader, with some flexibility to chose the keyword endings etc
-{
-public:
+class InputFile {//! InputFile is a general input file reader, with some flexibility to chose the keyword endings etc
+ public:
 	using string = std::string;
 
 	InputFile(bool multiline=true)
 	:	informative(true), multiline_(multiline)  {
 		data_.push_back({string("end"), string()});//. add empty data at the end
-	};
+	}
 
 
 	InputFile(const string& fnam, bool multiline=true, bool inform=true, bool init=true)
@@ -74,7 +73,7 @@ public:
 			setTitle(fnam);
 		}
 		if(informative) std::cout<<std::endl;
-	};
+	}
 
 	InputFile(const string& kwrds, const string& nam, bool multiline=false)
 	:	informative(true), multiline_(multiline)  {  std::istringstream ss(kwrds);  read(ss, nam);  }

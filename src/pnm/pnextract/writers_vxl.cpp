@@ -1,298 +1,198 @@
-#ifndef ImageIO_H
-#define ImageIO_H
-
 
 #include "blockNet.h"
 
-
-
-
-
-
-
+///@cond INTERNAL
 
 
 voxelField<float> ballRadiiToVoxel(const blockNetwork& mpn)  {
+	cout<< " write_radius   "<<endl;
 	voxelField<float> vfild(mpn.cg.nx,mpn.cg.ny,mpn.cg.nz,0);
 	{
 		const medialSurface & rf = *mpn.srf;
 
-		{
-			float maxr=0.;
-			float minr=0.;
-			std::vector<voxel>::const_iterator ti = rf.vxlSpace.begin()-1;
-			std::vector<voxel>::const_iterator tend = rf.vxlSpace.end();
-			while (++ti<tend)  {
-				{
-					vfild(ti->i,ti->j,ti->k) = ti->R;
-						 maxr=max(maxr,ti->R);
-						 minr=min(minr,ti->R);
-				}
-			}
-			cout<< "  radius  [" << minr <<"  " << maxr <<"]   nVs:" << rf.vxlSpace.size() <<endl;
+		float maxr=0.,  minr=0.;
+		for(const auto& vi: rf.vxlSpace)  {
+			vfild(vi.i,vi.j,vi.k) = vi.R;
+			maxr=max(maxr,vi.R);
+			minr=min(minr,vi.R);
 		}
+		cout<< "  radius  [" << minr <<"  " << maxr <<"]   nVs:" << rf.vxlSpace.size() <<endl;
 	}
-
- 	return vfild;
+	return vfild;
 }
 
 
 
-voxelImageT<int> VElemsPlusThroats(const blockNetwork& mpn)  {
-	voxelImageT<int> vfild(mpn.VElems);
- 	cout<< " VElemsPlusThroats   "<<endl   ;
-	int throatValue=mpn.poreIs.size()+1000000;
-	std::vector<throatNE*>::const_iterator ti = mpn.throatIs.begin();
-	std::vector<throatNE*>::const_iterator tend = mpn.throatIs.end();
-	while (ti<tend)  {
-		std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
-		for ( ; vitr<(*ti)->toxels2.end();++vitr)
-			vfild((*vitr)->i+1,(*vitr)->j+1,(*vitr)->k+1) = throatValue;
-		++ti;
-	}
-
-
- 	return vfild;
-}
+/*//voxelImageT<int> VElemsPlusThroats(const blockNetwork& mpn)  {
+	//cout<< " VElemsPlusThroats   "<<endl;
+	//voxelImageT<int> vfild(mpn.VElems);
+	//int throatValue=mpn.poreIs.size()+1000000;
+	//for(const auto tr: mpn.throatIs)
+		//for (const auto  vi: tr->toxels2)
+			//vfild(vi->i+1,vi->j+1,vi->k+1) = throatValue;
+	//return vfild;
+//}*/
 
 
 
 
 
-///.  Written by Tom Bultreys {
+///.  Originally written by Tom Bultreys {
 
 voxelField<int> VThroats(const blockNetwork& mpn)  {
-    voxelField<int> vfild (mpn.VElems.size3() , 0);
-    cout<< " VThroats   "<<endl   ;
-    //int throatValue=mpn.poreIs.size()+1000000;
-    std::vector<throatNE*>::const_iterator ti = mpn.throatIs.begin();
-    std::vector<throatNE*>::const_iterator tend = mpn.throatIs.end();
-    while (ti<tend)  {
-        int throatValue = (*ti)->tid + 1;
-        std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
-        for ( ; vitr<(*ti)->toxels2.end();++vitr)
-            vfild((*vitr)->i+1,(*vitr)->j+1,(*vitr)->k+1) = throatValue;
-        ++ti;
-    }
-
-
-    return vfild;
+	cout<< " write_throats   "<<endl;
+	voxelField<int> vfild (mpn.VElems.size3() , 0);
+	for(const auto tr: mpn.throatIs)  {
+		int throatValue = tr->tid + 1;
+		for (const auto  vi: tr->toxels2)
+			vfild(vi->i+1,vi->j+1,vi->k+1) = throatValue;
+	}
+	return vfild;
 }
-
 
 voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)  {
-    int x,y,zdummy;
-    mpn.VElems.getSize(x,y,zdummy);
-    voxelField<int> vfild (int3(x,y,endSlice - beginSlice) , 0);
-    cout<< " VThroats   "<<endl   ;
-    //int throatValue=mpn.poreIs.size()+1000000;
-    std::vector<throatNE*>::const_iterator ti = mpn.throatIs.begin();
-    std::vector<throatNE*>::const_iterator tend = mpn.throatIs.end();
-    while (ti<tend)  {
-        int throatValue = (*ti)->tid + 1;
-        std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
-        for ( ; vitr<(*ti)->toxels2.end();++vitr)
-            if( (*vitr)->k+1 >= beginSlice && (*vitr)->k+1 < endSlice)
-                vfild((*vitr)->i+1,(*vitr)->j+1,(*vitr)->k + 1 - beginSlice) = throatValue;
-        ++ti;
-    }
-
-
-    return vfild;
-}
- voxelField<int> poreMaxBalls(const blockNetwork& mpn)  {
-    voxelField<int> vfild(mpn.cg.nx, mpn.cg.ny, mpn.cg.nz,0);
-    {
-        const medialSurface & rf = *mpn.srf;
-
-        std::vector<medialBall>::const_iterator vi = rf.ballSpace.begin();
-        std::vector<medialBall>::const_iterator voxend = rf.ballSpace.end();
-        while (vi<voxend)  {
-           int x,y,z;
-           x = vi->fi;
-           y = vi->fj;
-           z = vi->fk;
-             {
-
-               float rlim = vi->R*vi->R;//
-
-               /// absorb 2R range balls
-               int ex, ey, ez;
-               ex = 1*sqrt(rlim);
-               for (int a = -ex; a <=  ex; ++a)  { ey = sqrt(1*rlim-a*a);
-                 for (int b = -ey; b <=  ey; ++b)  { ez = sqrt(1*rlim-a*a-b*b);
-                   for (int c = -ez; c <=  ez; ++c)  {
-                       if (rf.isInside(x+a, y+b, z+c) && vfild(x+a,y+b,z+c) == 0 && vi->level()==1)
-                      // vfild(x+a,y+b,z+c) = vi->level();
-                           vfild(x+a,y+b,z+c) = mpn.VElems(x,y,z);
-
-                   }
-                 }
-               }
-             }
-             vi++;
-        }
-
-  }
-    return vfild;
+	cout<< " write_throats   "<<endl;
+   int x,y,zdummy;
+	mpn.VElems.getSize(x,y,zdummy);
+	voxelField<int> vfild (int3(x,y,endSlice - beginSlice) , 0);
+	for(const auto tr: mpn.throatIs)  {
+		int throatValue = tr->tid + 1;
+		for (const auto  vi: tr->toxels2)
+			if( vi->k+1 >= beginSlice && vi->k+1 < endSlice)
+				vfild(vi->i+1, vi->j+1, vi->k+1-beginSlice) = throatValue;
+	}
+	return vfild;
 }
 
 
- voxelField<int> poreMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice)  {
-    voxelField<int> vfild(mpn.cg.nx, mpn.cg.ny, lastSlice - firstSlice, 0);
-    {
-        const medialSurface & rf = *mpn.srf;
 
-        std::vector<medialBall>::const_iterator vi = rf.ballSpace.begin();
-        std::vector<medialBall>::const_iterator voxend = rf.ballSpace.end();
-        while (vi<voxend)  {
-           int x,y,z;
-           x = vi->fi;
-           y = vi->fj;
-           z = vi->fk;
-             {
+voxelField<int> poreMaxBalls(const blockNetwork& mpn)  {
+	cout<< " write_poreMaxBalls   "<<endl;
+	voxelField<int> vfild(mpn.cg.nx, mpn.cg.ny, mpn.cg.nz,0);
 
-               float rlim = vi->R*vi->R;//
+	const medialSurface & rf = *mpn.srf;
 
-               /// absorb 2R range balls
-               int ex, ey, ez;
-               ex = 1*sqrt(rlim);
-              // if( (x + (1 + ex) < firstSlice) || (x - ( 1 + ex) > lastSlice) )
-              //     continue;
-               for (int a = -ex; a <=  ex; ++a)  { ey = sqrt(1*rlim-a*a);
-                 for (int b = -ey; b <=  ey; ++b)  { ez = sqrt(1*rlim-a*a-b*b);
-                   for (int c = -ez; c <=  ez; ++c)  {
-                       if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice && z+c < lastSlice) && vfild(x+a,y+b,(z-firstSlice)+c) == 0 && vi->level()==1)
-                      // vfild(x+a,y+b,z+c) = vi->level();
-                           vfild(x+a,y+b,z-firstSlice+c) = mpn.VElems(x,y,z);
+	for(const medialBall& vi: rf.ballSpace)  if(vi.level()==1)  {
+		int x= vi.fi,   y= vi.fj,   z= vi.fk;
+		float rlim = vi.R*vi.R;
 
-                   }
-                 }
-               }
-             }
-             vi++;
-        }
-
-  }
-    return vfild;
+		/// absorb 2R range balls
+		int ex, ey, ez;
+		ex = 1*sqrt(rlim);
+		for (int a=-ex; a<=ex; ++a)  {
+		  ey = sqrt(1*rlim-a*a);
+		  for (int b=-ey; b<=ey; ++b)  {
+			 ez = sqrt(1*rlim-a*a-b*b);
+			 for (int c=-ez; c<=ez; ++c)
+				  if (rf.isInside(x+a, y+b, z+c) && vfild(x+a,y+b,z+c) == 0)
+						vfild(x+a,y+b,z+c) = mpn.VElems(x,y,z);
+		  }
+		}
+	}
+	return vfild;
 }
 
- voxelField<int> throatMaxBalls(const blockNetwork& mpn)  {
-    voxelField<int> vfild(mpn.cg.nx,mpn.cg.ny,mpn.cg.nz,0);
-    {
-        const medialSurface & rf = *mpn.srf;
+voxelField<int> poreMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice)  {
+	cout<< " write_poreMaxBalls   "<<endl;
 
-        std::vector<throatNE *>::const_iterator thr = mpn.throatIs.begin();
-        std::vector<throatNE *>::const_iterator thrEnd = mpn.throatIs.end();
-        while (thr<thrEnd)  {
-           int x,y,z;
-          const medialBall* vi1 = (*thr)->mb11();
-          const medialBall* vi2 = (*thr)->mb22();
-          const medialBall* vi;
+	voxelField<int> vfild(mpn.cg.nx, mpn.cg.ny, lastSlice - firstSlice, 0);
 
-          //select largest inscribed sphere
-          if(vi1 && vi2){
-              if(vi1->R > vi2->R)
-                  vi = (*thr)->mb11();
-              else
-                  vi = (*thr)->mb22();
-            }
-          else if (vi1)
-              vi = (*thr)->mb11();
-          else
-              vi = (*thr)->mb22();
+	const medialSurface & rf = *mpn.srf;
 
-           x = vi->fi ;
-           y = vi->fj ;
-           z = vi->fk ;
+	for(const medialBall& vi: rf.ballSpace)  if (vi.level()==1)  {
+		int x= vi.fi,   y= vi.fj,   z= vi.fk;
+		float rlim = vi.R*vi.R;
 
-             {
+		/// absorb 2R range balls
+		int ex, ey, ez;
+		ex = 1*sqrt(rlim);
+		// if( (x + (1 + ex) < firstSlice) || (x - ( 1 + ex) > lastSlice) )  continue;
+		for (int a=-ex; a<=ex; ++a)  {
+		  ey = sqrt(1*rlim-a*a);
+		  for (int b=-ey; b<=ey; ++b)  {
+			 ez = sqrt(1*rlim-a*a-b*b);
+			 for (int c=-ez; c<=ez; ++c)
+				if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice && z+c < lastSlice) 
+						&& vfild(x+a,y+b,(z-firstSlice)+c) == 0)
+					vfild(x+a,y+b,z-firstSlice+c) = mpn.VElems(x,y,z);
 
-               float rlim = vi->R*vi->R;//
+		  }
+		}
+	}
+	return vfild;
+}
 
-               /// absorb 2R range balls
-               int ex, ey, ez;
-               ex = 1*sqrt(rlim);
-               for (int a = -ex; a <=  ex; ++a)  { ey = sqrt(1*rlim-a*a);
-                 for (int b = -ey; b <=  ey; ++b)  { ez = sqrt(1*rlim-a*a-b*b);
-                   for (int c = -ez; c <=  ez; ++c)  {
-                       if (rf.isInside(x+a, y+b, z+c) && vfild(x+a,y+b,z+c) == 0){
-                           int val = (*thr)->tid + 1;
-                           vfild(x+a,y+b,z+c) = val;
-                       }
 
-                   }
-                 }
-               }
-             }
-             thr++;
-        }
+voxelField<int> throatMaxBalls(const blockNetwork& mpn)  {
+	cout<< " write_throatMaxBalls   "<<endl;
+	voxelField<int> vfild(mpn.cg.nx,mpn.cg.ny,mpn.cg.nz,0);
 
-  }
-    return vfild;
+	const medialSurface & rf = *mpn.srf;
+
+	for(const auto tr: mpn.throatIs)  {
+		const medialBall* vi1 = tr->mb11(),  *vi2 = tr->mb22(), *vi;
+
+		if(vi1 && vi2)  {	// select largest inscribed sphere
+			if(vi1->R > vi2->R)  vi = tr->mb11();
+			else                 vi = tr->mb22();  }
+		else if (vi1)          vi = tr->mb11();
+		else                   vi = tr->mb22();
+
+		int x= vi->fi,   y= vi->fj,   z= vi->fk;
+		float rlim = vi->R*vi->R;
+
+		/// absorb 2R range balls
+		int ex, ey, ez;
+		ex = 1*sqrt(rlim);
+		for (int a=-ex; a<=ex; ++a)  {
+		 ey = sqrt(1*rlim-a*a);
+		 for (int b=-ey; b<=ey; ++b)  {
+			ez = sqrt(1*rlim-a*a-b*b);
+			for (int c=-ez; c<=ez; ++c)
+				if (rf.isInside(x+a, y+b, z+c) && vfild(x+a,y+b,z+c) == 0)
+					vfild(x+a,y+b,z+c) = tr->tid + 1;
+		 }
+		}
+	}
+	return vfild;
 }
 
 
  voxelField<int> throatMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice)  {
-    voxelField<int> vfild(mpn.cg.nx,mpn.cg.ny,lastSlice - firstSlice,0);
-    {
-        const medialSurface & rf = *mpn.srf;
+	cout<< " write_throatMaxBalls   "<<endl;
+	voxelField<int> vfild(mpn.cg.nx,mpn.cg.ny,lastSlice - firstSlice,0);
+	const medialSurface & rf = *mpn.srf;
 
-        std::vector<throatNE *>::const_iterator thr = mpn.throatIs.begin();
-        std::vector<throatNE *>::const_iterator thrEnd = mpn.throatIs.end();
-        while (thr<thrEnd)  {
-           int x,y,z;
-          const medialBall* vi1 = (*thr)->mb11();
-          const medialBall* vi2 = (*thr)->mb22();
-          const medialBall* vi;
+	for(const auto tr: mpn.throatIs)  {
+		const medialBall* vi1 = tr->mb11(),  *vi2 = tr->mb22(),  *vi;
 
-          //select largest inscribed sphere
-          if(vi1 && vi2){
-              if(vi1->R > vi2->R)
-                  vi = (*thr)->mb11();
-              else
-                  vi = (*thr)->mb22();
-            }
-          else if (vi1)
-              vi = (*thr)->mb11();
-          else
-              vi = (*thr)->mb22();
+		if(vi1 && vi2)  {		//select largest inscribed sphere
+			 if(vi1->R > vi2->R)   vi = tr->mb11();
+			 else                  vi = tr->mb22();  }
+		else if (vi1)     vi = tr->mb11();
+		else              vi = tr->mb22();
 
-           x = vi->fi ;
-           y = vi->fj ;
-           z = vi->fk ;
+		int x= vi->fi,   y= vi->fj,   z= vi->fk;
+		float rlim = vi->R*vi->R;
 
-             {
-
-               float rlim = vi->R*vi->R;//
-
-               /// absorb 2R range balls
-               int ex, ey, ez;
-               ex = 1*sqrt(rlim);
-               for (int a = -ex; a <=  ex; ++a)  { ey = sqrt(1*rlim-a*a);
-                 for (int b = -ey; b <=  ey; ++b)  { ez = sqrt(1*rlim-a*a-b*b);
-                   for (int c = -ez; c <=  ez; ++c)  {
-                       if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice && z+c < lastSlice) && vfild(x+a,y+b,z-firstSlice+c) == 0){
-                           int val = (*thr)->tid + 1;
-                           vfild(x+a,y+b,z-firstSlice+c) = val;
-                       }
-
-                   }
-                 }
-               }
-             }
-             thr++;
-        }
-
-  }
-    return vfild;
+		/// absorb 2R range balls
+		int ex, ey, ez;
+		ex = 1*sqrt(rlim);
+		for (int a=-ex; a<=ex; ++a)  {
+			ey = sqrt(1*rlim-a*a);
+			for (int b=-ey; b<=ey; ++b)  {
+				ez = sqrt(1*rlim-a*a-b*b);
+				for (int c=-ez; c<=ez; ++c)
+					if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice && 
+							z+c < lastSlice) && vfild(x+a,y+b,z-firstSlice+c) == 0)
+						vfild(x+a,y+b,z-firstSlice+c) = tr->tid + 1;
+			 }
+		}
+	}
+	return vfild;
 }
 ///. } Tom
 
 
+///@endcond
 
-
-
-
-
-#endif

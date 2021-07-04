@@ -121,24 +121,23 @@ typedef  var3<var3<int> > int3x3;
 typedef  var3<float>      float3;
 typedef  var3<double>     dbl3;
 
-template<class T>  var3<T> rotateAroundLine(var3<T> y, double gamma,  var3<T> n, var3<T> x)  {
+template<class T>  var3<T> rotateAroundLine(var3<T> b, double gamma,  var3<T> n, var3<T> a)  {
 	//! rotate y around line passing through x, in the direction of n, http://inside.mines.edu/~gmurray/ArbitraryAxisRotation
-	double s = sinf(gamma),   c = cosf(gamma);
-	double k = 1. - c;
+	double s = sinf(gamma),   c = cosf(gamma),  nb = n.x*b.x + n.y*b.y +n.z*b.z, lc = 1.-c;
 	return var3<T>(
-	 	( x.x*(n.y*n.y+n.z*n.z) - n.x*( x.y*n.y+x.z*n.z-n.x*y.x- n.y*y.y-n.z*y.z ) )*k + y.x*c + (-x.z*n.y+x.y*n.z-n.z*y.y+n.y*y.z )*s,
-		( x.y*(n.x*n.x+n.z*n.z) - n.y*( x.x*n.x+x.z*n.z-n.x*y.x- n.y*y.y-n.z*y.z ) )*k + y.y*c + ( x.z*n.x-x.x*n.z+n.z*y.x-n.x*y.z )*s,
-		( x.z*(n.x*n.x+n.y*n.y) - n.z*( x.x*n.x+x.y*n.y-n.x*y.x- n.y*y.y-n.z*y.z ) )*k + y.z*c + (-x.y*n.x+x.x*n.y-n.y*y.x+n.x*y.y )*s );
+	 	( a.x*(n.y*n.y+n.z*n.z) - n.x*( a.y*n.y+a.z*n.z - nb ) )*lc + b.x*c + (-a.z*n.y+a.y*n.z-n.z*b.y+n.y*b.z )*s,
+		( a.y*(n.x*n.x+n.z*n.z) - n.y*( a.x*n.x+a.z*n.z - nb ) )*lc + b.y*c + ( a.z*n.x-a.x*n.z+n.z*b.x-n.x*b.z )*s,
+		( a.z*(n.x*n.x+n.y*n.y) - n.z*( a.x*n.x+a.y*n.y - nb ) )*lc + b.z*c + (-a.y*n.x+a.x*n.y-n.y*b.x+n.x*b.y )*s );
 }
-template<class T>  var3<T> rotateAroundVec(const var3<T> y, double gamma, var3<T> n)  {
-	//! rotate y around n (line passing through centre, in the direction of n) http://inside.mines.edu/~gmurray/ArbitraryAxisRotation
-	double s = sinf(gamma),   c = cosf(gamma);
-	double k = 1. - c;
-	return var3<T>(
-		(  - n.x*( -n.x*y.x- n.y*y.y-n.z*y.z ) )*k + y.x*c + (n.y*y.z-n.z*y.y)*s,
-		(  - n.y*( -n.x*y.x- n.y*y.y-n.z*y.z ) )*k + y.y*c + (n.z*y.x-n.x*y.z)*s,
-		(  - n.z*( -n.x*y.x- n.y*y.y-n.z*y.z ) )*k + y.z*c + (n.x*y.y-n.y*y.x)*s );
+template<class T>  var3<T> rotateAroundVec(const var3<T> b, double gamma, var3<T> n)  {
+	//! Rotate b around line in the direction of n passing through centre, http://inside.mines.edu/~gmurray/ArbitraryAxisRotation
+	double sg = sinf(gamma),   cg = cosf(gamma),  nb = (n.x*b.x + n.y*b.y + n.z*b.z)*(1.-cg);
+	return var3<T>( n.x*nb + b.x*cg + (n.y*b.z-n.z*b.y)*sg,
+	                n.y*nb + b.y*cg + (n.z*b.x-n.x*b.z)*sg,
+	                n.z*nb + b.z*cg + (n.x*b.y-n.y*b.x)*sg );
 }
+
+
 
 
 //! 2D vector class template
@@ -296,17 +295,17 @@ class Vars: public piece<T>  {
 	Vars& operator /=(double t)  { return (*this)*=(1./t); }
 
 
-	void resize(int nn)
-	{ { if(d) delete[] d; }   if(nn) {d=new T[nn]; dn=d+nn; } else {d=0; dn=0; } }
-	void resize(int nn,const T& val)
-	{ { if(d) delete[] d; }   if(nn) {d=new T[nn]; dn=d+nn;  std::fill(d,dn, val); } else {d=0; dn=0; } }
-	void pbak(T& vj) // inefficient, use std::vector instead for dyn_array
-	{	if(d){ T* od=d;  d=new T[dn+1-d]; std::copy(od,dn,d);
+	void resize(int nn)  {
+		{ if(d) delete[] d; }   if(nn) {d=new T[nn]; dn=d+nn; } else {d=0; dn=0; } }
+	void resize(int nn,const T& val)  {
+		{ if(d) delete[] d; }   if(nn) {d=new T[nn]; dn=d+nn;  std::fill(d,dn, val); } else {d=0; dn=0; } }
+	void pbak(T& vj) {// inefficient, use std::vector instead for dyn_array
+		if(d){ T* od=d;  d=new T[dn+1-d]; std::copy(od,dn,d);
 				 dn=d+dn-od+1;    *(dn-1)=vj;      delete[] od; }
 		else { d=new T[1];      *d=vj;           dn=d+1;      }
 	}
-	void pbak(const piece<T> vs)
-	{	if(d){ T* od=d;               d=new T[dn+vs.size()-d];       std::copy(od,dn, d);
+	void pbak(const piece<T> vs){
+		if(d){ T* od=d;               d=new T[dn+vs.size()-d];       std::copy(od,dn, d);
 				 dn=d+dn-od+vs.size();  std::copy(vs.d, vs.dn, dn-vs.size());  delete[] od; }
 		else { d=new T[vs.size()];    std::copy(vs.d, vs.dn, d);          dn=d+vs.size(); }
 	}
@@ -533,20 +532,20 @@ template<class T, template<class ...> class C2>
                           std::istream& operator >> (std::istream& ins, Table<T,C2>& tbl) { // inefficient!!!
 	ins >> std::ws;
 	std::string row, item;
-	if( std::is_arithmetic<T>::value && isalpha(ins.peek()))
-	{	getline( ins, row );
+	if( std::is_arithmetic<T>::value && isalpha(ins.peek()))  {
+		getline( ins, row );
 		std::stringstream ss( row );
 		while ( getline( ss, item, tbl.sep_ ) )   tbl.hds_.push_back(item);
 	}
 	std::vector<std::vector<T> > res;
-	while( getline( ins, row ))
-	{	std::vector<T> Ro;	std::stringstream ss( row );
+	while( getline( ins, row ))  {
+		std::vector<T> Ro;	std::stringstream ss( row );
 		while ( getline( ss, item, tbl.sep_ ) )   Ro.push_back( strTo<T>(item) );
 		res.push_back( Ro );
 	}
 	if(res.size()) tbl.vss_.resize(res[0].size());   else return ins;
-	for (size_t i=0; i<tbl.vss_.size(); ++i)
-	{	tbl.vss_[i].resize(res.size());
+	for (size_t i=0; i<tbl.vss_.size(); ++i)  {
+		tbl.vss_[i].resize(res.size());
 		if(res[i].size()!=tbl.vss_.size()) std::cout<<"Error table sizes don't match"<<std::endl;
 		for (size_t j=0; j<tbl.vss_[i].size(); ++j) tbl.vss_[i][j]=res[j][i];
 	}
@@ -612,7 +611,7 @@ template<class T, size_t N> std::ostream& operator << (std::ostream& out, const 
 
 
 
-inline void        replaceInFromTo(std::string& str, const std::string& frm, const std::string & to) {
+inline void        replaceInFromTo(std::string& str, const std::string& frm, const std::string& to) {
 	//return str = std::regex_replace( str, std::regex(frm), to );
 	size_t po = 0;
 	while((po = str.find(frm, po)) != std::string::npos) {
@@ -627,7 +626,7 @@ inline void        replaceInBetweenTo(std::string& str, const std::string& bgn, 
 			str.replace(po0, po-po0, to); po = po0+to.length();  break; } }
 }
 
-inline std::string replaceFromTo(const std::string& str, const std::string& frm, const std::string & to) {
+inline std::string replaceFromTo(const std::string& str, const std::string& frm, const std::string& to) {
 	return std::regex_replace(str, std::regex(frm), to);
 	//size_t po = 0;
 	//while((po = str.find(frm, po)) != std::string::npos) { str.replace(po, frm.length(), to);  po += to.length();   }
@@ -635,13 +634,13 @@ inline std::string replaceFromTo(const std::string& str, const std::string& frm,
 }
 
 inline std::string baseName(const std::string& fName) { // removes file suffix
-	constexpr auto npos = std::string::npos;
 	auto dloc=fName.find_last_of('.'); 	
-    if( dloc != npos)      
-    {	{ auto sl=fName.find_last_of('/');  if( sl!=npos && sl>dloc) return fName; }
+    if( dloc != std::string::npos)    {
+    	auto sl=fName.find_last_of('/');  
+    	if( sl!=std::string::npos && sl>dloc) return fName; 
 		return fName.substr(0,dloc);
 	}
-    return fName;
+	return fName;
 }
 
 

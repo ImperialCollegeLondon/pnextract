@@ -58,19 +58,6 @@ msLibDir ?= ${msRoot}/lib
 
 
 
-# set thirdparty directory if not set
-ifndef ms3rd
- ifneq ("$(wildcard ${msSrc}/thirdparty/)","")
-  ms3rd := ${msSrc}/thirdparty
- else
-  ifneq ("$(wildcard ${msRoot}/thirdparty/)","")
-   ms3rd := ${msRoot}/thirdparty
-  endif
- endif
- $(info ms3rd set to ${ms3rd})
-endif
-
-
 ifneq ($(MAKECMDGOALS),clean) ############### if not cleaning  ###############:
 
 msReleaseDate ?= \"$(shell date +'%Y.%m.%d')\"
@@ -89,6 +76,20 @@ ifeq (${USE_VXIMG},1)
  else 
    msCFLAGS += -I${msSrc}/libvoxel
  endif
+endif
+
+
+
+# set thirdparty directory if not set
+ifndef ms3rd
+ ifneq ("$(wildcard ${msSrc}/thirdparty/)","")
+  ms3rd := ${msSrc}/thirdparty
+ else
+  ifneq ("$(wildcard ${msRoot}/thirdparty/)","")
+   ms3rd := ${msRoot}/thirdparty
+  endif
+ endif
+ #$(info ms3rd set to ${ms3rd})
 endif
 
 

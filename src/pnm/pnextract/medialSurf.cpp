@@ -187,10 +187,9 @@ void medialSurface::paradoxremoveincludedballI()
 	cout<< " remove included balls:"; cout.flush();
 
 	int ndel = 0;
-	std::vector<voxel*>::iterator vpp = tvs.begin();
-	std::vector<voxel*>::iterator end = tvs.end();
-	while (vpp < end)
-	{
+	auto vpp = tvs.begin(),   end = tvs.end();
+	while (vpp < end)	{
+
 		voxel* vi = *vpp;
 		if (!vi->ball)	{	++vpp;	continue;	}
 
@@ -203,8 +202,7 @@ void medialSurface::paradoxremoveincludedballI()
 
 		int ex, ey, ez;
 		ex = ripinc;
-		for (int a = -ex; a <=  ex; ++a)
-		{
+		for (int a = -ex; a <=  ex; ++a)  {
 			ey = std::sqrt(ripinc*ripinc-a*a);
 			for (int b = -ey; b <=  ey; ++b)  {
 				ez = sqrt(ripinc*ripinc-a*a-b*b);//sqrts(r2i)+1-a-b;
@@ -344,89 +342,6 @@ void medialSurface::moveUphillp1(medialBall* bi) // const
 		//cout<<nrelocations<<" relocations "<<endl;
 }
 
-
-
-inline bool notNeiAcceptAsNei(medialBall* parent, medialBall*iKid, medialBall*jKid)  {
-	return ((dist(iKid,jKid)< iKid->R+jKid->R)+2
-	&& (distSqr(parent,iKid)+distSqr(parent,jKid) > 1.*distSqr(iKid,jKid))
-	&& iKid!=jKid && !(iKid->isNei(jKid))); // &&intersect(iKid,jKid)->limit>jKid->limit/2
-}
-
-void medialSurface::allyWithBossKids()  {
-
-
-
-	const std::vector<medialBall>::iterator voxend = ballSpace.end();
-	      std::vector<medialBall>::iterator vitr;
-
-
-	int nOverlap=0;
-	vitr = ballSpace.begin();
-	while (vitr != voxend)  {
-		 medialBall* vi=&*vitr;
-	  if (vi->boss!=vi)
-	  for (int j=0;j<vitr->boss->nKids;++j)  {
-
-		 medialBall* vj=vitr->boss->kids[j];
-		 if(vi==vj || vj->R>vi->boss->R*0.9) continue;
-
-		 { ++nOverlap;
-
-			 if (vj->R<vi->R) {medialBall* tmp=vi; vi=vj; vj=tmp;}
-
-			if(vi==vj) (cout<<"!vi==nei!").flush();
-
-			for (int ii=0;ii<vi->nKids;++ii)  {
-				medialBall* vii=vi->kids[ii];
-				int nAdoptNeis = vii->nNeis;
-				for (int jj=0;jj<vj->nKids;++jj)
-				  if(notNeiAcceptAsNei(vj, vii,vj->kids[jj]) )
-					 ++nAdoptNeis;
-				if (nAdoptNeis>vii->nNeis)  {
-					medialBall** ownNeis = vii->neis;
-					vii->neis=new medialBall*[nAdoptNeis];
-					int kk=0;
-					for (;kk<vii->nNeis;++kk)
-						vii->neis[kk]=ownNeis[kk];
-					if (vii->nNeis) delete[] ownNeis;
-					for (int jj=0;jj<vj->nKids;++jj)
-					  if(notNeiAcceptAsNei( vj , vii,vj->kids[jj]))
-						vii->neis[kk++]=vj->kids[jj];
-					vii->nNeis=kk;
-				}
-			}
-
-			{medialBall* tmp=vi; vi=vj; vj=tmp;}
-			for (int ii=0;ii<vi->nKids;++ii)  {
-				medialBall* vii=vi->kids[ii];
-				int nAdoptNeis = vii->nNeis;
-				for (int jj=0;jj<vj->nKids;++jj)
-				  if(notNeiAcceptAsNei(vi, vii,vj->kids[jj]))
-					 ++nAdoptNeis;
-				if (nAdoptNeis>vii->nNeis)  {
-					medialBall** ownNeis = vii->neis;
-					vii->neis=new medialBall*[nAdoptNeis];
-					int kk=0;
-					for (;kk<vii->nNeis;++kk)
-						vii->neis[kk]=ownNeis[kk];
-					if (vii->nNeis) delete[] ownNeis;
-					for (int jj=0;jj<vj->nKids;++jj)
-					  if(notNeiAcceptAsNei(vi, vii,vj->kids[jj]))
-						vii->neis[kk++]=vj->kids[jj];
-					vii->nNeis=kk;
-				}
-			}
-
-
-
-
-		 }
-	  }
-	  ++vitr;
-	}
-
-	cout<<" nAlliedBossKids ********************************* "<<nOverlap<<endl;
-}
 
 
 void makeFriend(medialBall* vi, medialBall* vj)  {

@@ -53,14 +53,10 @@ inline double elapsedTime(clock_t start){  return (double(clock()-start)/CLOCKS_
 
 // used in network extraction code
 
-class Timing
-{
+class Timing  {
  public:
 	Timing() : clock_(clock()) {}
-	~Timing() { report();}
-
-	void report()
-	{
+	~Timing() {
 		(*this)("");// insert last task
 		std::cout<<"cpu times:\n";
 		for(auto& itr:times) std::cout<<"  "<<itr.first<<": "<<itr.second<<std::endl;
@@ -78,5 +74,19 @@ class Timing
 	std::string           task_;
 	std::unordered_map<std::string,double> times;
 };
+
+
+
+
+class Stats  {
+	std::map<std::string,int> counts_;
+ public:
+	~Stats()  {
+		std::cout<<"Stats:\n";
+		for(auto& it:counts_) std::cout<<"  "<<it.first<<": "<<it.second<<std::endl;  }
+	void count(const std::string& cs) {  counts_.insert({cs,0}).first->second += 1;  }
+};	
+_STATIC_	thread_local Stats _Stats;
+
 
 #endif

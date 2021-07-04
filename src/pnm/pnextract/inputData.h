@@ -12,10 +12,9 @@ using namespace std;
 
 #ifndef PORORANGE_H
 #define PORORANGE_H
-class poroRange :
-public std::pair<unsigned char,unsigned char>
-{
-public:
+class poroRange : public std::pair<unsigned char,unsigned char> {
+
+ public:
 	poroRange(unsigned char lower, unsigned char upper) : std::pair<unsigned char,unsigned char>(lower,upper){};
 	poroRange(std::string nam, unsigned char lower,unsigned char upper)
 	  : std::pair<unsigned char,unsigned char>(lower,upper),name(nam){};
@@ -37,8 +36,7 @@ inline int createSample_input_nextract(std::string fnam, std::string opts)
 	         +     "   pnextract -g input_pnextract.mhd\n",  -1);
 
 	ofstream of(fnam);
-	if(opts=="-g")
-	{
+	if(opts=="-g")  {
 	 of	<<"ObjectType =  Image\n"
 		<<"NDims =       3\n"
 		<<"ElementType = MET_UCHAR\n"
@@ -115,26 +113,7 @@ public:
 
 
 
- void init(bool verbos=true)
- {
-
-	cout<< "Reading inputDataNE data:"<<endl;
-	echoKeywords(std::cout);
-
-	std::istringstream iss;
-
-
-
-
-	//Assert(giv("DimSize", iss) ||  giv("imageSize", iss) || !verbos, "DimSize or imageSize", "keyword not found", false);
-		//iss >> nx >> ny >> nz;
-	//if(verbos)  cout<< " image size: " << nx << " " << ny << " " << nz <<endl;
-
-
-	//Assert(giv("ElementSize", vxlSize) || giv("ElementSpacing", vxlSize) || giv("voxelSize", vxlSize) || !verbos, "ElementSpacing or voxelSize", "keyword not found", false);
-	//if(verbos)  cout<< " voxel size: " <<vxlSize <<endl;
-
-
+ void init(bool verbos=true)  {
 
 	if (!giv("DefaultImageFormat", imgfrmt)) imgfrmt=".raw.gz";
 	if(imgfrmt[0]!='.') imgfrmt="."+imgfrmt;
@@ -144,27 +123,17 @@ public:
 	nBP6 = getOr("multiDir",false) ? 6 : 2;
 
 	cout<<" voxel indices:"<<endl;
-	if (giv("voidSpace", iss))  {
-		std::string rockTypeName;
-		iss>>rockTypeName;
-		cout<<"  "<<0<<": rockTypeName = "<<rockTypeName<<endl;
-		poroRange ithRockType(rockTypeName,0,0);
+	_rockTypes.push_back(poroRange("void",0,0));
+	cout<<"  "<<0<<": void voxels "<<endl;
 
-		_rockTypes.push_back(ithRockType);
-	}
-	else  {
-		poroRange ithRockType("void",0,0);
-		_rockTypes.push_back(ithRockType);
-		cout<<"  "<<0<<": void voxels "<<endl;
-	}
+	std::istringstream iss;
 
 
 	segValues.resize(256, _rockTypes.size());
 
 	for_i(_rockTypes)  {
 		auto& rt=_rockTypes[i];
-		if(giv(rt.name+"_range", iss))
-		{
+		if(giv(rt.name+"_range", iss))  {
 			int lower,upper;
 			iss >> lower >> upper;
 			rt.first = lower;
@@ -173,8 +142,7 @@ public:
 				cout<<"  Wrong entries for keyword \""<<rt.name+"_range"<<"\":  lower value is higher than upper value"<<endl;
 		}
 
-		for(size_t j = rt.first; j <=  rt.second; ++j)
-			segValues[j] = i;
+		for(size_t j=rt.first; j<=rt.second; ++j)  segValues[j] = i;
 
 		cout<<"  "<< rt.name<<" voxel values: ["<<int(rt.first)<< " "<<int(rt.second)<<"]"<<endl;
 	}
@@ -183,14 +151,11 @@ public:
 	for(size_t i=0; i<=12; ++i)		cout<<" "<<segValues[i];
 	cout<<" ... "<<endl;
 
-
-
-
  }
 
 
- void readImage()
- {
+ void readImage() {
+
 
 	std::string fnam(fileName());
 	if(fnam.empty()) { giv("ElementDataFile",fnam) || giv("read",fnam); }
@@ -224,21 +189,20 @@ public:
 	cout<<" siz:"<<VImage.size3()<<" vxlSize:"<<vxlSize<<" X0:"<<X0<<endl;
 	
 	int2 outrange;
-	if(giv("outside_range", outrange))
-	{
+	if(giv("outside_range", outrange))  {
 		forAllcp(VImage) if(outrange.a<=(*cp) && (*cp)<=outrange.b) --nInside;
 		cout<<" outside_range: "<<outrange<<"; inside_fraction: "<<nInside/(double(nx)*ny*nz)<<endl;
 	}
  }
 
- void createSegments()
- {
+ void createSegments() {
 
 
 
 
-	std::vector<size_t> nVxlVs(_rockTypes.size()+1,0);
-	segs_.resize(nz,std::vector<segments>(ny));
+
+	stvec<size_t> nVxlVs(_rockTypes.size()+1,0);
+	segs_.resize(nz,stvec<segments>(ny));
 
 
 
@@ -249,11 +213,9 @@ public:
 	#endif
 
 	OMPragma("omp parallel for  reduction(vec_sizet_plus : nVxlVs)")
-	for (int iz = 0; iz<nz; ++iz)
-	{
-		std::vector<segment> segTmp(nx+1);
-		for (int iy = 0; iy<ny; ++iy)
-		{
+	for (int iz = 0; iz<nz; ++iz)  {
+		stvec<segment> segTmp(nx+1);
+		for (int iy = 0; iy<ny; ++iy)  {
 			int cnt = 0;
 			int  currentSegValue = 257;
 			for (int ix = 0; ix<nx; ++ix)
@@ -288,8 +250,7 @@ public:
 
 	cout<< endl;
 	size_t nVInsids=0;
-	for_i(_rockTypes)
-	{
+	for_i(_rockTypes)  {
 		nVInsids+=nVxlVs[i];
 		cout<<" "<<i<<". "<< _rockTypes[i].name<<": "<<nVxlVs[i]<<" voxels, "<< nVxlVs[i]/(double(0.01*nx)*ny*nz) << "%"<<endl;
 	}
@@ -299,8 +260,8 @@ public:
  }
 
 
- const segment* segptr(int i, int j, int k) const
- {
+ const segment* segptr(int i, int j, int k) const {
+
 	if (i<0 || j<0 || k<0 || i>= nx || j>= ny || k>= nz)  return &invalidSeg;
 
 	const segments& s = segs_[k][j];
@@ -315,21 +276,21 @@ public:
 	std::string netName() const { return name()+(flowBaseDir.empty() ? "DS0" : (flowBaseDir.back()=='/' ? "DS1": "DS4")); }
 public:
 
-	int nx, ny, nz;
-	int nBP6;
-	double vxlSize;
-	dbl3 X0;
-	std::string imgfrmt;
-	long long nInside;
+	int                    nx, ny, nz;
+	int                    nBP6;
+	double                 vxlSize;
+	dbl3                   X0;
+	std::string            imgfrmt;
+	long long              nInside;
 
-	std::string flowBaseDir;
+	std::string            flowBaseDir;
 
-	std::vector< std::vector<segments> > segs_;
-	segment invalidSeg;
+	stvec<stvec<segments>> segs_;
+	segment                invalidSeg;
 
-	std::vector<int> segValues;
-	std::vector<poroRange> _rockTypes;
-	voxelImage VImage;
+	stvec<int>             segValues;
+	stvec<poroRange>      _rockTypes;
+	voxelImage             VImage;
 
 };
 

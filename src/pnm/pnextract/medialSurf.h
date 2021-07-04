@@ -56,7 +56,6 @@ class medialSurface
 
 
 
-	void allyWithBossKids();
 
 	void moveUphill(medialBall* b_i);
 	void moveUphillp1(medialBall* b_i);
