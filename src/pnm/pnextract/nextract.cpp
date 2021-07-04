@@ -78,9 +78,10 @@ int nextract(inputDataNE& cfg, bool verbose)  {
 	if (!cfg.getOr("overwrite", true) && ifstream(cfg.netName()+".gnm")) { // overwrite by default,  sync with WRITENETWORKG(), sync with tests
 		cout<<"\n File "+cfg.netName()+".gnm"+" exists, delete it to regenerate, or set keyword `overwrite T;`\n"<<endl;  return 2; }
 
+	(cout<< "InputData: ").flush();
+	cfg.echoKeywords(std::cout);
 
-		if (cfg.getOr("write_all", false)) // use `write_all` as a rememberable alternative for all other visualization keywords
-		{
+		if (cfg.getOr("write_all", false))  { // use `write_all` as a rememberable alternative for all other visualization keywords
 			cfg.add("write_radius","true");
 			cfg.add("write_statistics","true");
 			cfg.add("write_elements","true");
@@ -89,7 +90,6 @@ int nextract(inputDataNE& cfg, bool verbose)  {
 				 cfg.add("write_throats","true");
 			//cfg.add("write_poroats","true");   leads to seg fault
 			cfg.add("write_hierarchy","true");
-			cfg.add("write_medialSurface","true");
 			cfg.add("write_throatHierarchy","true");
 			cfg.add("write_vtkNetwork","true");
 			cfg.add("write_cnm","true");
@@ -105,9 +105,9 @@ int nextract(inputDataNE& cfg, bool verbose)  {
 	cfg.createSegments();  // RLE compress image 
 
 															tim("createMedialSurface");
-	medialSurface* mSrf;
-	blockNetwork mpn(mSrf,cfg);
-	mpn.createMedialSurface(mSrf,cfg,0);
+	medialSurface* srf;
+	blockNetwork mpn(srf, cfg);
+	mpn.createMedialSurface(srf, cfg,0);
 
 															tim("write");
 			if (cfg.getOr("write_radius", false))	ballRadiiToVoxel(mpn).writeBin(cfg.name()+"_radius"+cfg.imgfrmt);
@@ -119,7 +119,7 @@ int nextract(inputDataNE& cfg, bool verbose)  {
 			if (cfg.getOr("write_elements", true))	mpn.VElems.write(cfg.name()+"_VElems.mhd");
 
 															tim("write");
-	mpn.createNewThroats(mSrf);
+	mpn.createNewThroats(srf);
 
 
 
@@ -127,9 +127,8 @@ int nextract(inputDataNE& cfg, bool verbose)  {
 
 																tim("write");
 			if (cfg.getOr("write_hierarchy", false))
-																vtuWriteMbMbs(cfg.name()+"_mbHierarchy"+_s(0), mpn.allSpace,  mpn.poreIs,  mpn.VElems, cfg.vxlSize, mpn.VElems.X0()+mpn.VElems.dx());
-			if (cfg.getOr("write_medialSurface", false))
-																 vtuWriteMedialSurface(cfg.name()+"_medialSurface"+_s(0), mpn.allSpace,  mpn.poreIs,  mpn.VElems, cfg.vxlSize,mpn.VElems.X0()+mpn.VElems.dx());
+																vtuWriteMbMbs(cfg.name()+"_mbHierarchy"+_s(0), srf->ballSpace,  mpn.poreIs,  mpn.VElems, cfg.vxlSize, mpn.VElems.X0()+mpn.VElems.dx());
+
 			//if (cfg.getOr("write_poroats", false))         VElemsPlusThroats(mpn).writeBin(cfg.name()+"_poroats"+cfg.imgfrmt,1,cfg.nx,1,cfg.ny,1,cfg.nz);
 			if (cfg.getOr("write_throatHierarchy", false)) vtuWriteThroatMbMbs(cfg.name()+"_throatHierarchy", mpn.throatIs,  mpn.poreIs,  mpn.VElems, cfg.vxlSize,mpn.VElems.X0()+mpn.VElems.dx());
 			if (cfg.getOr("write_vtkNetwork", false))      vtuWritePores(cfg.name()+"_pores",  mpn.poreIs, mpn.throatIs, cfg.vxlSize, mpn.VElems.X0()+mpn.VElems.dx());
