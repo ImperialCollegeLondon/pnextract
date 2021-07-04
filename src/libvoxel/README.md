@@ -10,24 +10,20 @@ The library can read raw data in ascii (.dat) or binary (.raw) formats, in Avizo
 
 ### Usage
 
-This library is used to read 3D image files from other codes, however the standalone app `voxelImageProcess`, which solely acts as an interface to libvoxel, can be used to print help messages about the keywords supported by libvoxel:
+This library is used to read 3D image files from other codes, however the standalone app `voxelImageProcess`, which solely acts as an interface to libvoxel, can be used to run basic image processing tasks as well as to print help messages about the keywords supported by libvoxel:
 
    `voxelImageProcess -h`
 
 
-### Compile instructions
+### Compilation instructions
 
-#### pre-requisites:
+See the [../script/README.md](../script/README.md) build instructions.
 
-To install necassary libraries in Ubuntu (18.08 etc.), run:    
-	`sudo apt install libjpeg-dev  #used by libtiff`    
-	`sudo apt install liblzma-dev  #used by libtiff`    
+The code as a library is not currently compiled into binary format. It meant to be header only, but to reduce compile time the library parts are seperated in the voxelImage.cpp file which is compiled and linked statistically to other executables.
+
+The voxelImageProcess utility is pre-compiled into a Win64 executable in pnextract and pnflow codes, in [../../bin.7z](../../bin.7z).
 
 ### Download, build and install
-
-The voxelImage.cpp needs to be compiled and linked with other apps 
-like pnextract and porefoam. Alternatively the file can be #included in
-a .cpp standalone code such as the voxelImageProcess.cpp image processor. 
 
 ###  Licence
 
