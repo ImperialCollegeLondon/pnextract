@@ -15,18 +15,11 @@ else
 # msCFLAGS += -std=c++11 -MMD -MP
 endif
 
-# $(info msCFLAGS set to ${msCFLAGS})
-
-#-O3 -Wall -pedantic
-
 # msSrc=
 # msRoot=
 # msBinDir=
 
-#link to relative path to exe
-#msCFLAGS ?= -Wl,-rpath,'$ORIGIN/../lib' 
-
-
+#FIXME: MPICPP = mpic++
 
 ############# set via makefile of individual applications ##############
 
@@ -35,20 +28,23 @@ endif
 # USE_OMP=1
 
 
-
-
-#Note: for debugging find&replace @${msCXX} with ${msCXX} in this file
-
-
+########################### Cross-compile ############################
+ifeq "${OPT}" ".exe"
+  preCC=x86_64-w64-mingw32-
+  msCXX=${preCC}g++
+  msLFLAGS += -static -static-libstdc++ -static-libgcc
+  $(info msCXX=$(msCXX))
+endif
 
 
 ########################################################################
-####################### do not change here after   #####################
+#################### no need to change here after   ####################
 
 
+#link relative path to exe
+#msCFLAGS ?= -Wl,-rpath,'$ORIGIN/../lib' 
 
-ifndef msSrc
- # set msSrc to upper directory if not already set
+ifndef msSrc  # set msSrc to upper directory if not already set
  msSrc := $(abspath $(lastword $(MAKEFILE_LIST))/../..)
  $(info msSrc set to ${msSrc})
 endif
@@ -62,33 +58,6 @@ msLibDir ?= ${msRoot}/lib
 
 
 
-
-
-
-
-
-
-
-InDir=In $(notdir $(abspath $(dir $(PWD))))/$(notdir $(PWD)): ***  
-
-msReleaseDate ?= \"$(shell date +'%Y.%m.%d')\"
-
-
-msCFLAGS += -I${msSrc}/include -I${msRoot}/include -DRELEASE_DATE=$(msReleaseDate) -D_FILE_OFFSET_BITS=64
-msLFLAGS += -L$(msLibDir)
-
-
-
-ifeq (${USE_VXIMG},1)
- ifdef USED_VXLIB
-   $(info $(InDir) using voxlib instead of libvoxel)
- else 
-   msCFLAGS += -I${msSrc}/libvoxel
- endif
-endif
-
-
-
 # set thirdparty directory if not set
 ifndef ms3rd
  ifneq ("$(wildcard ${msSrc}/thirdparty/)","")
@@ -98,7 +67,28 @@ ifndef ms3rd
    ms3rd := ${msRoot}/thirdparty
   endif
  endif
- #$(info ms3rd set to ${ms3rd})
+ $(info ms3rd set to ${ms3rd})
+endif
+
+
+ifneq ($(MAKECMDGOALS),clean) ############### if not cleaning  ###############:
+
+msReleaseDate ?= \"$(shell date +'%Y.%m.%d')\"
+
+
+msCFLAGS += -I${msSrc}/include -I${msRoot}/include -DRELEASE_DATE=$(msReleaseDate) -D_FILE_OFFSET_BITS=64
+msLFLAGS += -L$(msLibDir)
+
+
+InDir=In $(notdir $(abspath $(dir $(PWD))))/$(notdir $(PWD)): ***  
+
+
+ifeq (${USE_VXIMG},1)
+ ifdef USED_VXLIB
+   $(info $(InDir) using voxlib instead of libvoxel)
+ else 
+   msCFLAGS += -I${msSrc}/libvoxel
+ endif
 endif
 
 
@@ -111,8 +101,8 @@ ifdef USE_TIFF
 
    ifneq ($(shell ${msCXX} -ljpeg 2>&1 | grep ljpeg > /dev/null; echo $$?),0)
        msLFLAGS += -ljpeg 
-   else
-     $(info ignoring jpeg)
+   #else
+     #$(info ignoring jpeg)
    endif
 
    ifneq ($(shell ${msCXX} -llzma 2>&1 | grep llzma > /dev/null; echo $$?),0)
@@ -124,7 +114,7 @@ ifdef USE_TIFF
  endif
 endif
 
-#-pedantic -static # -lstdc++ -lm
+
 
 # set zlib directory
 # Note: ${ZLIBDIR}/contrib/iostream3/zfstream.h should be installed too
@@ -175,7 +165,7 @@ endif
 
 
 
-
+# svplot not released yet
 ifdef USE_SVG
  ifneq ("$(wildcard ${ms3rd}/svplot/svplot.hpp)","")
    msCFLAGS += -I${ms3rd}/svplot -DSVG
@@ -187,19 +177,16 @@ endif
 
 
 
-# Warning: VTK-8.9 and upwards do not work on tesla3&4(Ubuntu16)
-ifdef USE_VTK 
- msCMAKFLAGS := ${msCmakeFLAGS}  -DVTK_DIR:PATH=${HOME}/.local/lib/cmake/vtk-8.2  -DCMAKE_INSTALL_PREFIX=${msRoot} 
-endif
+
 
 
 
 ifneq "${OPT}" ".exe"
  # set openMP for parallel image processing, mesh generation ... 
- # not yet fully integrated with the "released" codes due to portability concerns / too experimental 
+ # not yet fully integrated with the "released" codes due to portability issues / being experimental 
  ifdef USE_OMP 
-  msCFLAGS += -DOpenMP $(mpic++ -showme:compile) -fopenmp
-  msLFLAGS += $(mpic++ -showme:link)  -fopenmp
+  msCFLAGS += -DOpenMP $(shell mpic++ -showme:compile) -fopenmp
+  msLFLAGS += $(shell mpic++ -showme:link)  -fopenmp
  endif
 else
  msLFLAGS += -static -lstdc++ -lm   -lstdc++fs
@@ -210,13 +197,53 @@ else
 endif
 
 
+
+
 ifeq ($(USE_XDMF),1)
    msCFLAGS += -I${msSrc}/Xdmf -DXDMF  
 endif
 
-#$(info msCFLAGS: ${msCFLAGS})
 
-ifdef USE_MINIFOAMX3
+endif                        ###############  if not cleaning  ###############:
+
+
+
+
+
+ifeq "${OPT}" "dbg"
+ msCFLAGS += -g -fno-inline  -D_debugCompile_  -D_extraCompile_ ${CFLAGSExtra} 
+else
+ msCFLAGS += -O3  ${CFLAGSExtra}
+endif
+
+
+# check and otherwise set default name for executable
+makFilDir:=${CURDIR}
+ifndef exec
+ exec:=$(shell basename ${CURDIR})${OPT}
+endif
+
+
+# set build and test directories here, lib and bin are set through bashrc file
+msBuildDir ?= ${msRoot}/build/${exec}
+msTestDir ?= ${msRoot}/test/${exec}
+
+psAppDirs:
+	$(info  BuildDir: ${msBuildDir},   BinDir: $(msBinDir))
+	@mkdir -p $(msBinDir)
+	@mkdir -p ${msBuildDir}
+
+msLibDirs:
+	$(warning  BuildDir: ${msBuildDir},  LibDir: $(msLibDir))
+	@mkdir -p $(msLibDir)
+	@mkdir -p ${msBuildDir}
+
+msTstDirs:
+	@mkdir -p ${msTestDir}
+
+
+
+ifdef USE_MINIFOAMX3  #######################################################:
   WM_PROJECT_DIR ?= ${ms3rd}/foamx3m
   WM_PROJECT ?= foam
   WM_OSTYPE  ?= POSIX
@@ -255,7 +282,7 @@ ifdef USE_MINIFOAMX3
   deps += $(OFC2dep)
 else
   SO         ?= .so
-endif
+endif  # USE_MINIFOAMX3  #######################################################:
 
 
 
@@ -273,46 +300,53 @@ endif
 ### defaults to be included in makefiles by setting USE_msMAKE=1
 #########################################################################
 
-# WARNING: last make should be called from inside source folder  ########
-
-
-# check and otherwise set default name for executable
-makFilDir:=${CURDIR}
-ifndef exec
- exec:=$(shell basename ${CURDIR})${OPT}
-endif
-
-
-# set build and test directories here, lib and bin are set through bashrc file
-msBuildDir ?= ${msRoot}/build/${exec}
-msTestDir ?= ${msRoot}/test/${exec}
-
-psAppDirs:
-	$(info  BuildDir: ${msBuildDir},   BinDir: $(msBinDir))
-	@mkdir -p $(msBinDir)
-	@mkdir -p ${msBuildDir}
-
-msLibDirs:
-	$(warning  BuildDir: ${msBuildDir},  LibDir: $(msLibDir))
-	@mkdir -p $(msLibDir)
-	@mkdir -p ${msBuildDir}
-
-msTstDirs:
-	@mkdir -p ${msTestDir}
+#### WARNING: last make should be called from inside source folder  #####
 
 
 
 
+ifdef   USE_msRecurse ############# run make in subfolders ###################:
+makls=$(shell find */ -maxdepth 1 -type f | grep -e    /makefile$$     | grep -v [\ \(\)] | grep -v [-]/ | sed s/\\/makefile//g)
+makes=$(shell find */ -maxdepth 1 -type f | grep -e    /Makefile$$     | grep -v [\ \(\)] | grep -v [-]/ | sed s/\\/Makefile//g)
+# cmaks=$(shell find */ -maxdepth 1 -type f | grep -e /CMakeLists.txt$$  | grep -v [\ \(\)] | grep -v [-]/ | sed s/\\/CMakeLists.txt//g)
 
-ifeq "${OPT}" "dbg"
- msCFLAGS += -g -fno-inline  -D_debugCompile_  -D_extraCompile_ ${CFLAGSExtra} 
+recurseMakeLibs: $(addprefix make_,${makls}) 
+
+recurseMakeExes: $(addprefix make_,${makes}) 
+
+recurseMake: 
+	@$(MAKE) -f ${msSrc}/script/Makefile.in recurseMakeLibs USE_msRecurse=1
+	@$(MAKE) -f ${msSrc}/script/Makefile.in recurseMakeExes USE_msRecurse=1
+	@printf '\n*  ${makls}  ${makes}  :/ \n\n'
+
+recurseClean: $(addprefix clean_,${makes})
+	@printf '\n* $^ :/\n\n'
+
+# msBilDir ?= $msRoot/build
+# cm2xe = $(@:cmak_%=%)
+# cmak_%:; @printf '\n$@: \n'
+#	 (cd  $(cm2xe)  && $(MAKE)  USE_msRecurse='')
+#	 mkdir -p ${msBilDir}/$(cm2xe) 
+#	 cmake -S$(PWD)/$(cm2xe)   -B${msBilDir}/$(cm2xe)
+#	 cmake --build ${msBilDir}/$(cm2xe) -j
+#	 cmake --install  ${msBilDir}/$(cm2xe)
+
+make_%:; @printf '\n$@: \n'
+	@(cd  $(@:make_%=%)  && $(MAKE)  USE_msRecurse='')
+
+clean_%:; @printf '\n$@: \n'
+	@(cd  $(@:clean_%=%) && $(MAKE) clean  USE_msRecurse='' || echo '  check clean target for $(PWD)/$(@:clean_%=%)' )
+
 else
- msCFLAGS += -O3  ${CFLAGSExtra}
-endif
+  recurseMake:  ; $(error recurseMake  target requested without USE_msRecurse=1, $^)
+  recurseClean: ; $(error recurseClean target requested without USE_msRecurse=1, $^)
+endif  # USE_msRecurse  #####################################################:
 
 
-##########################################single-source .cpp app:
-ifdef USE_SINGLECPP
+
+
+
+ifdef   USE_SINGLECPP   ################ single-source .cpp app ##################:
  $(info  Single-source apps)
  cpp2d := $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.d))))
  cpp2o = $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(@:.cpp=.o))))
@@ -324,7 +358,7 @@ ${msBuildDir}/%.o: $(o2cpp)
 	${msCXX} ${msCFLAGS} -c $(o2cpp)   -o $@
 
 $(srcs): psAppDirs $(cps2o) 
-	@echo  Building  $(cpp2o) '>> ' $(@:.cpp=)
+	@echo  Building  $(cpp2o) '>> ' $(@:.cpp=${OPT})
 	@${msCXX} $(cpp2o)  -o $(msBinDir)/$(@:.cpp=)${OPT} ${msLFLAGS}
 
 -include $(cpp2d)
@@ -333,32 +367,32 @@ $(srcs): psAppDirs $(cps2o)
 
 clean:
 	$(RM) $(cps2o) $(cpp2d)
+
+endif #  USE_SINGLECPP    #####################################################:
+
+
+
+# Warning: VTK-8.9 and upwards do not work on t3&4(Ubuntu16)
+ifdef USE_VTK 
+ msCmakeFLAGS += -DVTK_DIR:PATH=${HOME}/.local/lib/cmake/vtk-8.2  -DCMAKE_INSTALL_PREFIX=${msRoot} 
 endif
 
-
-
-############## compile Cmake app/lib ###############.
-ifdef USE_msCMAKE
+ifdef USE_msCMAKE  ################## compile Cmake app/lib ##################:
 msCApp:
 	mkdir -p  ${msBuildDir}
-	(cd       ${msBuildDir} &&  cmake $(msCMAKFLAGS) -DmsSrc=${msSrc} $(makFilDir))
+	(cd       ${msBuildDir} &&  cmake $(msCmakeFLAGS) -DmsSrc=${msSrc} $(makFilDir))
 	(cd       ${msBuildDir} &&  make VERBOSE=1) || echo errors occurred but continuing
-	cp ${msBuildDir}/${exec} $(msBinDir)        || echo Warning:  cannot copy ${msBuildDir}/${exec}, but continuing
+	@cp ${msBuildDir}/${exec} $(msBinDir)        || echo Warning:  cannot copy ${msBuildDir}/${exec}, but continuing
+clean: ; cd ${msBuildDir} && make clean && rm -rf ${msBuildDir}
 else
   msCApp: ; $(error msCApp target should be used togather with USE_msCMAKE=1, $^)
-endif
-####################################################'
+endif # USE_msCMAKE  ########################################################:
 
 
 
 
 
-
-######### compile single app source files #########.
-ifdef USE_msMAKE
-
-  $(info Building ${CURDIR} -> ${exec})
-  
+ifdef USE_msMAKE ################ compile single app folder ######################:
   # recursively include subfolders
   _rI = $(addprefix -I,$(shell find $(1) -type d)) 
   
@@ -367,30 +401,22 @@ ifdef USE_msMAKE
   cpp2o = $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.o))))
   cpp2d = $(addprefix ${msBuildDir}/,$(subst /,__,$(subst ..,++,$(srcs:.cpp=.d))))
 
-
-
-
   objs += $(cpp2o)
   deps += $(cpp2d)
 
-
 msApp: psAppDirs $(objs)
-	@echo  Building $(msBinDir)/${exec}
+	@echo Building ${CURDIR}  -> $(msBinDir)/${exec}
 	@${msCXX}  $(objs) -o $(msBinDir)/${exec} ${msLFLAGS}
-
 
 msLib: psAppDirs $(objs)
 	@mkdir -p $(msLibDir)
 	@echo  Building $(msLibDir)/${exec}
 	@${msCXX} $(objs) -shared -o $(msLibDir)/lib${exec}.${SO} ${msLFLAGS}
 
-
-
 .PHONY: clean ${deps}
 
 clean:
 	$(RM) $(objs) ${deps}
-
 
 -include ${deps}
 
@@ -412,15 +438,13 @@ winVS:
 
 else
   msApp: ; $(error msApp target should be used togather with USE_msMAKE=1)
-endif
-####################################################'
+endif  #  USE_msMAKE  ###########################################################:
 
 
 
 
 
-#################### run tests ####################.
-ifdef USE_msTEST
+ifdef USE_msTEST #################### run tests #################################:
   # t_ is making targets .PHONY (re-run anyway)
   tst2test := $(addprefix T${msTestDir}/,$(subst /,__,$(subst ..,++,$(tsts))))
   test2tst = $(subst T${msTestDir}/,,$(subst __,/,$(subst ++,..,$@)))
@@ -450,5 +474,5 @@ test: msTstDirs $(tst2test)
 	@echo  All tests finished $(tst2test) ${msTestDir}/
  
 .PHONY:  clean test 
-endif
-####################################################'
+endif  # USE_msTEST #################################################################:
+

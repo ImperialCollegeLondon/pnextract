@@ -78,11 +78,10 @@ workflow for code compilation, testing, deployment and release.
 
 ##  Caution
 
-The script here use recursive make by running the AllMake and AllClean 
-scripts. The script change, add and delete files on your 
-computer: the root directory where files are changed, generated or 
+The scripts here use recursive make. These change and delete files on
+your system: the top directory where files are changed, generated or 
 deleted is called msRoot which, by default, points to two directories 
-upper to the location of these script themselves.  So, if you ever consider
+upper to the location of these script themselves.  So, if you consider
 using these scripts for building your applications, make sure these are 
 wrapped inside two (sub-)sub-folders, dedicated to source codes.  Here is 
 what the directory structure should looks like:
