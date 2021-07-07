@@ -37,7 +37,7 @@ int usage()  {
 		" ElementType = MET_SHORT\n"
 		"\n"
 		" DimSize     = 650  650  650\n"
-		" ElementSize = 5.  5.  5.\n"
+		" ElementSize = 5.   5.   5.\n"
 		" Offset      = 0    0    0\n"
 		"\n"
 		" ElementDataFile = Berea.tif\n"
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])  {
 
 	if(header[0]=='?') {
 		cout<<outputName<<" "<<VxlKeysHelp(outputName,extra)<<endl;
-		return 0;}
+		return 0; }
 
 	cout<<"//-*-C-*-\\ voxelImageProcess, in: "<<header<<",  out:"<<outputName<<endl;
 	if(!outputName.size()) cerr<<"\n\nWarning: no output (2nd argument) \n\n"<<endl;

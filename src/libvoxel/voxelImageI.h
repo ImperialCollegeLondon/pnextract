@@ -489,11 +489,10 @@ template<typename T>   void voxelField<T>::writeBin(std::string fnam) const  {
 
 	std::cout<<  "\n  writing binary file "<<fnam<<";  size: "<<nnn; std::cout.flush();
 	auto mod = std::ios::out | std::ios::binary;
-	if( hasExt(fnam,3,".am") ) // in case write Header called before
-	{
+	if( hasExt(fnam,3,".am")) 	{ // in case write Header called before
 		char cs[]="xxx";
 		std::ifstream is(fnam); if(is)	{ is.seekg (3, is.end);	is.get(cs,3); }		is.close();
-		if(cs[0]!='@' || cs[1]!='1' || cs[2]!='\n')	writeHeader(fnam,{0,0,0},nnn,1.,0.);
+		if(cs[0]!='@' || cs[1]!='1' || cs[2]!='\n')	writeHeader(fnam,{0,0,0},nnn,{1.,1.,1.},{0.,0.,0.});
 		mod = mod | std::ios::app;
 	}
 	//else if(!hasExt(fnam,4,".tif")) writeHeader(fnam,{0,0,0},nnn); this overwrites voxelImage one
@@ -548,7 +547,7 @@ void voxelField<T>::writeBin(std::string fnam, int iS,int iE, int jS,int jE, int
 	if(hasExt(fnam,3,".am"))  {
 		char cs[]="xxx";
 		std::ifstream is(fnam);		if(is)	{ is.seekg (3, is.end);	is.get(cs,3); }		is.close();
-		if(cs[0]!='@' || cs[1]!='1' || cs[2]!='\n')	writeHeader(fnam,{iS,jS,kS},{iE,jE,kE}, 1., 0.);
+		if(cs[0]!='@' || cs[1]!='1' || cs[2]!='\n')	writeHeader(fnam,{iS,jS,kS},{iE,jE,kE}, {1.,1.,1.}, {0.,0.,0.});
 		mod = mod | std::ios::app;
 	}
 	//else if(!hasExt(fnam,4,".tif"))		writeHeader(fnam,{iS,jS,kS},{iE,jE,kE}, 1., 0.); this overwrites voxelImage one
@@ -1101,7 +1100,7 @@ void voxelImageT<T>::rotate(char direction)  {// wrong X0
 			double dxTmp=dx_.x;   dx_.x=dx_.z;  dx_.z=dxTmp;
 		}
 		voxelImageT<T> tmp=*this;
-		this->reset(n3,n2,n1,0);
+		this->reset(n3,n2,n1,T(0));
 		size_t nij =this->nij_;
 		OMPFor()
 		for (int k=0; k<n3; ++k)
@@ -1124,18 +1123,16 @@ void voxelImageT<T>::rotate(char direction)  {// wrong X0
 		}
 
 		voxelImageT<T> tmp=*this;
-		this->reset(n2,n1,n3,0);
+		this->reset(n2,n1,n3,T(0));
 		for (int k=0; k<n3; ++k)
-			for (int j=0; j<n2; ++j)
-			{	//for (int i=1; i<n1; ++i) (*this)(j,i,k)=tmp(i,j,k);
-				for (int i=1; i<n1 ; i+=2)
-				{
+			for (int j=0; j<n2; ++j) {
+				//for (int i=1; i<n1; ++i) (*this)(j,i,k)=tmp(i,j,k);
+				for (int i=1; i<n1 ; i+=2) {
 					const T& vv0 = tmp(i,j,k);
 					const T  vv1 = *(&vv0-1);
 					*(&((*this)(j,i,k)=vv0)-(*this).nnn_.x)=vv1;
 				}
 				if(n1%2) (*this)(j,n1-1,k)=tmp(n1-1,j,k);
-
 			}
 				
 	}
@@ -1148,9 +1145,7 @@ void voxelImageT<T>::rotate(char direction)  {// wrong X0
 					(*this)(n1-1-i, j, k)=tmp(i,j,k);
 	}
 	else
-	{
 		std::cout<<"\n\nSwapping "<<direction<<" and x directions(!?!), skipping  \n"<<std::endl;
-	}
 
 }
 
@@ -1171,8 +1166,7 @@ void voxelImageT<T>::PointMedian032(int nAdj0,int nAdj1, T lbl0, T lbl1)  {
 		const T vv = (*this)(i,j,k); //(*this)(i-1,j-1,k-1);
 		if(lbl0==vv || vv ==lbl1)  {
 			int neiSum0=0, neiSum1=0;
-			forAllNei(-1,1)
-			{
+			forAllNei(-1,1) {
 				T vj=_nei(voxls,i,j,k);
 				neiSum0 += vj==lbl0;
 				neiSum1 += vj==lbl1;
@@ -1618,10 +1612,7 @@ template<typename T>
 void replaceRange(voxelImageT<T>& vImage, T minvi, T  maxvi, T midvi)  {
 	(std::cout<<"  "<<Tint(minvi)<<":"<<Tint(maxvi)<<"->"<<Tint(midvi)<<"  ").flush();
 	const T minv=minvi,   maxv=maxvi,  midv=midvi;
-	forAllvp_(vImage)  {	T vv = *vp;
-		if (minv<=vv && vv<=maxv)
-			*vp=midv;
-	}
+	forAllvp_(vImage)  if (minv<=*vp && *vp<=maxv)  *vp=midv;
 }
 
 
@@ -1913,7 +1904,7 @@ template<typename T> typename std::enable_if<!std::is_integral<T>::value,int>::t
 		default:   std::cout<<"  Image  "<<opr<<"= !!!not supported!!! ";
 	 }
 	}
-	else{
+	else  {
 	 if (!isalpha(img2Nam[0])&&!isalpha(img2Nam.back()))
 	 {
 		Tint   ii; ii=strTo<Tint>(img2Nam);

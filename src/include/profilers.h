@@ -86,7 +86,8 @@ class Stats  {
 		for(auto& it:counts_) std::cout<<"  "<<it.first<<": "<<it.second<<std::endl;  }
 	void count(const std::string& cs) {  counts_.insert({cs,0}).first->second += 1;  }
 };	
-_STATIC_	thread_local Stats _Stats;
+
+_Extern	thread_local Stats _Stats;
 
 
 #endif

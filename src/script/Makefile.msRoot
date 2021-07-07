@@ -20,6 +20,7 @@ all: checkRoot
 	(cd ${ms3rd} && $(MAKE) -f ${msSrc}/script/makefile.3rd  zlib)
 	(cd ${ms3rd} && $(MAKE) -f ${msSrc}/script/makefile.3rd )
 	(cd ${msSrc} && $(MAKE) -f ${msSrc}/script/Makefile.in recurseMake USE_msRecurse=1)
+	@echo done
 
 # Build for Windows
 mgw: checkRoot
@@ -29,6 +30,7 @@ mgw: checkRoot
 	(cd ${ms3rd} && $(MAKE) -f ${msSrc}/script/makefile.3rd  OPT=.exe)
 	(cd ${msSrc} && $(MAKE) -f ${msSrc}/script/Makefile.in recurseMake  OPT=.exe USE_msRecurse=1)
 	(cd bin && make -f ${msSrc}/script/Makefile.msRoot  checksum) || echo check checksum
+	@echo done
 
 
 clean: checkRoot

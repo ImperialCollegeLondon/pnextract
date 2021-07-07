@@ -231,7 +231,7 @@ template<typename T> bool read( stringstream& ins, voxelImageT<T>& vImg)  {
 	cout<<"  reading from  image "<<fnam<<endl;
 	if(fnam.size()>4)  {
 		if ((nnn[2] && (hasExt(fnam,7,".raw.gz") || hasExt(fnam,4,".raw"))) || hasExt(fnam,4,".tif") )  {
-			vImg.reset(nnn,0);
+			vImg.reset(nnn,T(0));
 			vImg.readBin(fnam);
 		}
 		else vImg.readFromHeader(fnam,processHdr);
@@ -300,7 +300,7 @@ template<typename T> bool FaceMedian06( stringstream& ins, voxelImageT<T>& vImg)
 template<typename T> bool PointMedian032( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("nItrs(1),  nAdj(11), lbl0(0), lbl1(1)");
 	int nItrs(1),  nAdj(11), lbl0(0), lbl1(1);
-	ins >> nItrs >>nAdj >>lbl0 >>lbl1;
+	ins >> nItrs >> nAdj >> lbl0 >> lbl1;
 	(cout<<"  PointMedian032, "<<" nItrs:"<<nItrs<< "; nAdjThreshold "<<nAdj<<"  lbl0:"<<lbl0<<"  lbl1;"<<lbl1<<"s \n  PointMedian032 is only applied to the labels  lbl0 and  lbl1").flush();
 	//vImg.growBox(2);
 
@@ -316,7 +316,7 @@ template<typename T> bool faceMedNgrowToFrom( stringstream& ins, voxelImageT<T>&
 	KeyHint("nItrs(2),  lblTo(0), lblFrm(1), ndif(-3)");
 	int nItrs(2),  ndif(-3); 
 	Tint lblTo(0), lblFrm(1);
-	ins  >>nItrs >>lblTo >>lblFrm >>ndif;
+	ins  >> nItrs >> lblTo >> lblFrm >> ndif;
 	(cout<<"{ "<<" nItrs:"<<nItrs<<"; "<<lblFrm<<" --> "<<lblTo<< "; ndif: "<<ndif<<";  ").flush();
 
 	vImg.growBox(2); cout<<endl;

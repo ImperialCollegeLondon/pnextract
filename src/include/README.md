@@ -42,7 +42,7 @@ calibration of C++ codes.
 
 -------
 
-[timing.h] Implements the following classes:
+[profilers.h] Experimental - implements the following classes:
 
  - Timer : records execution of different parts of the code using tic() 
  and toc() members. `_tic_` and `_tac_` convenience macros assume a 
@@ -51,7 +51,11 @@ calibration of C++ codes.
  - `Timing`: collects and prints the CPU clock data when the Timing scope 
  finishes ( during objection destruction). See the test.cpp for an 
  example usage of this.
-
+ 
+ - `Watch`: 
+ 
+ - `Stats`: 
+ 
 
 -------
 

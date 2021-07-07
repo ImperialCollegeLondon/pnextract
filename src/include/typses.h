@@ -74,9 +74,9 @@ class var3  {
 	T	x, y, z;
 	var3() = default;// Warning: not zero initialized in opt mode
 	template< typename std::enable_if<std::is_arithmetic<T>::value,int>::type = 0> 
-	var3(T r)                 { x = r;     y = r;     z = r; } // use this to zero-initialize
+	explicit var3(T r)        { x = r;     y = r;     z = r; } // use this to zero-initialize 
 	var3(T r, T s, T t)       { x = r;     y = s;     z = t; }
-	var3(const T* d)          { x = d[0];  y = d[1];  z = d[2]; }
+	explicit var3(const T* d)          { x = d[0];  y = d[1];  z = d[2]; }
 	template<class U>
 	var3(var3<U> n)           { x = n.x;   y = n.y;   z = n.z; }
 	#ifdef VMMLIB__VECTOR__HPP

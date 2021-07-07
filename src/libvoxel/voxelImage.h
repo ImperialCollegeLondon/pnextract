@@ -175,6 +175,9 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image 
 
 	voxelImageT():X0_(0.,0.,0.),dx_(1,1,1) {};
 
+	voxelImageT(int n1, int n2, int n3, T value) //do not remove, the following constructor will be misused in old codes!
+	: voxelField<T>( n1,  n2,  n3,  value),  X0_(0.,0.,0.), dx_(1.,1.,1.) {}
+
 	voxelImageT(int3 n, dbl3 dx=dbl3(1.,1.,1.), dbl3 xmin=dbl3(0.,0.,0.), T value=0)
 	: voxelField<T>( n.x,  n.y,  n.z,  value), X0_(xmin),dx_(dx) {}
 

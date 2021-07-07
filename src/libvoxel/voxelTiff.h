@@ -11,9 +11,6 @@
 #include <string.h>
 #include <iostream>
 
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
 
 
 

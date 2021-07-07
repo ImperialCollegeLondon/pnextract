@@ -6,7 +6,6 @@
 #include <memory>
 #include <map>
 // definition of global class and macros used to debugging and testing
-// `#define INITSTATICS` in main.cpp then `#include "globals.h"`
 
 
 /// mkdir getcwd chdir
@@ -100,12 +99,13 @@ namespace std {}
 
 
 // Risky hack to allow both declaration and definition of global static variables from .h files.
-#ifdef INITSTATICS
-	#define _STATIC_ 
-	#define _STARGS_(...)  __VA_ARGS__
+// `#define _InitGlobals` in main.cpp then `#include "globals.h"`...
+#ifdef _InitGlobals
+	#define _Extern 
+	#define _Eq(...)  = __VA_ARGS__
 #else
-	#define _STATIC_ static
-	#define _STARGS_(...)  
+	#define _Extern extern 
+	#define _Eq(...)  
 #endif
 
 

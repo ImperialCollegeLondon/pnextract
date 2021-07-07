@@ -17,9 +17,13 @@ or contact Ali Q. Raeini by email: a.qaseminejad-raeini@imperial.ac.uk
 #endif
 
 
+#ifndef MAIN
+#define _InitGlobals
+#endif
+
 #include "blockNet.h"
 #include "writers.h"
-#include "timing.h"
+#include "profilers.h"
 
 using namespace std;
 
