@@ -22,6 +22,6 @@ Download the [bin.7z](bin.7z) for pre-compiled Windows executables.
 
 For contacts and references please see: 
 https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling
-or contact Ali Q. Raeini, email: a.q.raeini@gmail.com
+or contact Sajjad Foroughi, email: s.foroughi@imperial.ac.uk
 
 
