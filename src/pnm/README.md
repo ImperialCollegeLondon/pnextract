@@ -56,7 +56,7 @@ The code and executables are provided as is, without any kind of warranty;
 use at your own risk.
 
 For contact and further information see [Imperial College - Pore-scale Consortium] website,
-raise an `issue` on github, or send me an email:   a.q.raeini@imperial.ac.uk
+raise an `issue` on github, or send me an email:   s.foroughi@imperial.ac.uk
 
 
 ### References
