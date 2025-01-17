@@ -619,7 +619,7 @@ class  voxelplugins
 template<class InpT, typename T>  //! run voxel plugins
  int vxlProcess(const InpT& ins, voxelImageT<T>& img, string nam) {  return voxelplugins<T>().process(ins,img,nam);  }
 
-template<class InpT, typename First=uint8_t, typename... Rest>
+template<class InpT, typename First, typename... Rest>
  int vxlProcess(const InpT& ins, voxelImageTBase* imgPtr, string nam)  { //! detect type and run voxel plugins
 	if(auto img = dynamic_cast<voxelImageT<First>*>(imgPtr))  
 		return vxlProcess<InpT,First>(ins,*img,nam);
