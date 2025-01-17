@@ -2,34 +2,26 @@ name: make and test
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-    - name: Cache dependencies (if applicable)
+    - name: Cache lib
       uses: actions/cache@v2
       with:
         path: |
           ~/lib
-        key: ${{ runner.os }}-lib-${{ hashFiles('**/Makefile') }}  # Ensure cache is keyed properly
-        restore-keys: |
-          ${{ runner.os }}-lib-
+        key: ${{ runner.os }}-lib
 
-    - name: Set up dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential  # Install any required build tools (e.g., gcc, make)
-
-    - name: Run make with verbosity for debugging
-      run: make V=1  # Enables verbose output during the build process
-
-    - name: Run tests
+    - name: make
+      run: make -j
+    - name: test
       run: make test
