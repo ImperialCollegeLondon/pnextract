@@ -1,3 +1,8 @@
+
+**pnextract** is an open-source software written in C++ that extracts pore networks from images or statistical reconstructions of porous materials. These pore networks preserve the topology of the pore space and also calculate other parameters, such as the pore size distribution, interfacial area and volume needed for analysis and simulations. this code provide essential network files for pore network flow model ([**pnflow**](https://github.com/aliraeini/pnflow)). 
+For more in-depth understanding of the code, users can refer to specific papers related to this topic, which may provide additional insights [1, 2].
+
+
 ![make and test](https://github.com/aliraeini/pnextract/workflows/make%20and%20test/badge.svg)
 
 ##  pnextract - pore-network extraction
