@@ -12,8 +12,6 @@
 
  ----------------------------------------------------------------
 
-For more in-depth understanding of the pnextract code, users can refer to specific papers related to this topic, which may provide additional insights [1, 2].
-
 ## See [src/pnm](src/pnm) and [doc](doc) for details on pnextract code.
 
 ## See [src/script/README.md](src/script/README.md) for compile/build instructions.
@@ -37,7 +35,7 @@ Alternatively, contact Sajjad Foroughi:
 - Additional Email: foroughi.sajad@gmail.com
 
 --
+For more in-depth understanding of the pnextract code, users can refer to following papers related to this topic, which may provide additional insights:
+- [Pore-network extraction from micro-computerized-tomography images](https://link.aps.org/doi/10.1103/PhysRevE.80.036307)
 
-- [1] [Pore-network extraction from micro-computerized-tomography images](https://link.aps.org/doi/10.1103/PhysRevE.80.036307)
-
-- [2] [Generalized network modeling: Network extraction as a coarse-scale discretization of the void space of porous media](https://https://en.wikipedia.org/wiki/Publication) 
+- [Generalized network modeling: Network extraction as a coarse-scale discretization of the void space of porous media](https://https://en.wikipedia.org/wiki/Publication) 
