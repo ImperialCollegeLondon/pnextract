@@ -36,6 +36,5 @@ Alternatively, contact Sajjad Foroughi:
 
 --
 For more in-depth understanding of the pnextract code, users can refer to following papers related to this topic, which may provide additional insights:
-- [Pore-network extraction from micro-computerized-tomography images](https://doi.org/10.1103/PhysRevE.80.036307)
 - [Pore-network extraction from micro-computerized-tomography images](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.80.036307)
-- [Generalized network modeling: Network extraction as a coarse-scale discretization of the void space of porous media](https://doi.org/10.1103/PhysRevE.96.013312) 
+- [Generalized network modeling: Network extraction as a coarse-scale discretization of the void space of porous media](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.96.013312) 
