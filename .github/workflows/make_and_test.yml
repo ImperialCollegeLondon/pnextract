@@ -8,14 +8,13 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Cache lib
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: |
           ~/lib
@@ -23,5 +22,6 @@ jobs:
 
     - name: make
       run: make -j
+
     - name: test
       run: make test
