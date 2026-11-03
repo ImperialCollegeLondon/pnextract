@@ -4,7 +4,9 @@ all: msApp
 msSrc ?= $(abspath ../..)
 
 msCFLAGS +=  -I. -Wall -pedantic -DEXPERIMENTAL
-msLFLAGS += -static-libgcc -static-libstdc++ 
+ifneq ($(shell uname -s),Darwin)
+ msLFLAGS += -static-libgcc -static-libstdc++
+endif
 
 # keep grouped for auto package
 srcs = \
