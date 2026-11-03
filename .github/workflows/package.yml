@@ -10,37 +10,78 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
-  package:
+  sdist:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v10.0.1
-      - name: Build
-        run: uv build
-      - name: Smoke test
-        run: |
-          uv venv
-          source .venv/bin/activate
-          uv pip install dist/*.whl
-          pnextract -h
-      - name: Publish to PyPI
-        if: github.event_name == 'release'
-        run: uv publish
-      - name: Upload binaries to GitHub Release
-        if: github.event_name == 'release'
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: uv build --sdist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  wheel:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: UCRT64
+          update: true
+          path-type: inherit
+          install: >-
+            make
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-libgomp
+      - uses: pypa/cibuildwheel@v4.3.5
+        if: runner.os == 'Linux'
+        with:
+          output-dir: dist
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          unzip -p dist/*.whl pnextract/pnextract > pnextract
-          unzip -p dist/*.whl pnextract/voxelImageProcess > voxelImageProcess
-          chmod +x pnextract voxelImageProcess
-          gh release upload "${{ github.event.release.tag_name }}" \
-            pnextract \
-            voxelImageProcess
+          CIBW_BUILD: cp312-manylinux_x86_64
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+      - if: runner.os != 'Linux'
+        run: uv build --wheel
+      - run: |
+          uv run --no-project --with ./dist/*.whl pnextract -h
+          uv run --no-project --with ./dist/*.whl voxelImageProcess "????"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-wheel-${{ runner.os }}-${{ runner.arch }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  publish-pypi:
+    if: github.event_name == 'release'
+    needs: [sdist, wheel]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: python-*
+          path: dist
+          merge-multiple: true
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: uv publish dist/*
