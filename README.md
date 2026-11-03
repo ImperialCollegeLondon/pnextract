@@ -38,7 +38,3 @@ This installs the command-line tools:
 pnextract
 voxelImageProcess
 ```
-
-### Standalone binaries
-
-Pre-built binaries produced by **LMMP/PUC-Rio** are attached to releases of this repository. Currently these target Linux only.
