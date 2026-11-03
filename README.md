@@ -42,13 +42,3 @@ voxelImageProcess
 ### Standalone binaries
 
 Pre-built binaries produced by **LMMP/PUC-Rio** are attached to releases of this repository. Currently these target Linux only.
-
-### Building from source
-
-Clone the repository and run:
-
-```bash
-make
-```
-
-For additional build information, see [`src/script/README.md`](src/script/README.md).
