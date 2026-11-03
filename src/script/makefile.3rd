@@ -11,7 +11,12 @@ msRoot ?= $(abspath ..)
 $(info msRoot set to ${msRoot})
 
 
-CmakeOpts= -DBUILD_SHARED_LIBS=False  -DCMAKE_INSTALL_PREFIX=${msRoot}  -DCMAKE_TOOLCHAIN_FILE=${msRoot}/src/script/toolchain${OPT}.txt
+CmakeOpts= -DBUILD_SHARED_LIBS=False  -DCMAKE_INSTALL_PREFIX=${msRoot}
+ifeq (${OS},Windows_NT)
+ CmakeOpts += -G "MSYS Makefiles"
+else
+ CmakeOpts += -DCMAKE_TOOLCHAIN_FILE=${msRoot}/src/script/toolchain${OPT}.txt
+endif
 
 
 ms3rd ?= ${CURDIR}
