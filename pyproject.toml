@@ -1,7 +1,6 @@
 [build-system]
 requires = [
     "cmake>=3.31.10,<4",
-    "packaging>=26.3",
     "setuptools>=84",
     "setuptools-scm[simple]>=10.2.3,<11",
 ]
@@ -17,6 +16,8 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: C++",
     "Topic :: Scientific/Engineering :: Image Processing",
